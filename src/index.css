@@ -109,3 +109,57 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* --- CORREÇÃO DE LAYOUT --- */
+
+.layout-principal {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* No PC: Menu na esquerda, Conteúdo na direita */
+@media (min-width: 769px) {
+  .layout-principal {
+    flex-direction: row; 
+  }
+  .conteudo-pagina {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+}
+
+/* No Celular: Conteúdo ocupa tudo, Menu vai para o rodapé */
+@media (max-width: 768px) {
+  .layout-principal {
+    flex-direction: column;
+  }
+  
+  .conteudo-pagina {
+    width: 100%;
+    padding: 15px;
+    padding-bottom: 80px; /* Para não ficar atrás do menu mobile */
+  }
+
+  .nav-mobile-bottom {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 65px;
+    background: #2f3542;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+  }
+
+  .mobile-link {
+    color: white;
+    text-decoration: none;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
