@@ -5,7 +5,8 @@ export default function Toolbar() {
     <div style={{
       display:"flex",
       gap:"10px",
-      marginBottom:"10px"
+      marginBottom:"30px",
+      marginTop:"50px"
     }}>
 
       <button>Filtrar</button>
