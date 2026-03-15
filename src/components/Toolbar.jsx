@@ -1,68 +1,79 @@
 import React from "react";
 
-export default function Toolbar({ onInserir, onEditar, onExcluir, onFiltrar, itemSelecionado }) {
-  // Verificamos se tem algo selecionado para habilitar/desabilitar botões de ação
+export default function Toolbar({
+  onInserir,
+  onEditar,
+  onExcluir,
+  onFiltrar,
+  itemSelecionado,
+  mostrarFiltro = true,
+  fixa = false
+}) {
+
   const temSelecao = !!itemSelecionado;
 
   return (
+
     <div style={{
       display: "flex",
-      gap: "10px",
-      marginBottom: "20px",
-      marginTop: "20px",
+      gap: "8px",
       flexWrap: "wrap",
-      background: "#f8fafc", // Fundo leve para destacar a barra
-      padding: "15px",
-      borderRadius: "8px",
-      border: "1px solid #e2e8f0"
+      background: "#ffffff",
+      padding: "10px",
+      borderBottom: "1px solid #e2e8f0",
+      boxShadow: fixa ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+
+      position: fixa ? "sticky" : "relative",
+      top: fixa ? 0 : "auto",
+      zIndex: 100
     }}>
-      <button onClick={onFiltrar} className="btn-toolbar" style={btnStyle}>
-        🔍 Filtrar
-      </button>
-      
-      <button 
-        onClick={onInserir} 
+
+      {mostrarFiltro && (
+        <button onClick={onFiltrar} style={btnStyle}>
+          🔍 Filtrar
+        </button>
+      )}
+
+      <button
+        onClick={onInserir}
         style={{ ...btnStyle, backgroundColor: "#2c3e50", color: "white" }}
       >
         ➕ Inserir
       </button>
 
-      <button 
-        onClick={onEditar} 
+      <button
+        onClick={onEditar}
         disabled={!temSelecao}
-        style={{ 
-          ...btnStyle, 
-          backgroundColor: temSelecao ? "#3498db" : "#cbd5e0", 
-          color: "white",
-          cursor: temSelecao ? "pointer" : "not-allowed"
+        style={{
+          ...btnStyle,
+          backgroundColor: temSelecao ? "#3498db" : "#cbd5e0",
+          color: "white"
         }}
       >
         📝 Editar
       </button>
-            
-      <button 
+
+      <button
         onClick={onExcluir}
         disabled={!temSelecao}
-        style={{ 
-          ...btnStyle, 
-          background: temSelecao ? "#e74c3c" : "#cbd5e0", 
-          color: "white",
-          cursor: temSelecao ? "pointer" : "not-allowed"
+        style={{
+          ...btnStyle,
+          backgroundColor: temSelecao ? "#e74c3c" : "#cbd5e0",
+          color: "white"
         }}
       >
         🗑️ Excluir
       </button>
+
     </div>
   );
 }
 
-// Estilo base para os botões (como uma classe CSS interna)
 const btnStyle = {
   border: "none",
-  padding: "10px 20px",
+  padding: "8px 16px",
   borderRadius: "6px",
   cursor: "pointer",
   fontWeight: "600",
-  fontSize: "14px",
-  transition: "all 0.2s ease"
+  fontSize: "13px"
 };

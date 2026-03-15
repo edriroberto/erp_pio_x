@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom" // Adicionado useLocation
 import { supabase } from "../utils/supabaseClient"
+import { useParams } from "react-router-dom"
 
 export default function CadastroSepultamento() {
   const navigate = useNavigate()
   const location = useLocation() // Captura os dados vindos da Toolbar
+  const { id } = useParams()
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
   const [quadras, setQuadras] = useState([])
@@ -26,6 +28,16 @@ export default function CadastroSepultamento() {
     obito_entregue: false,
     observacoes: ""
   })
+
+  //EFEITO: Captura ID passado como parámetro da dashboard
+  useEffect(()=>{
+
+    if(id){
+    carregarSepultamento(id)
+    }
+
+    },[id])
+
 
   // EFITO: Captura dados da Toolbar para Edição
   useEffect(() => {
@@ -92,6 +104,39 @@ export default function CadastroSepultamento() {
     setForm(prev => ({ ...prev, [name]: val }))
   }
 
+  async function carregarSepultamento(id){
+
+  const { data, error } = await supabase
+    .from("vw_sepultamentos_v1")
+    .select("*")
+    .eq("id", id)
+    .single()
+
+  if(error){
+    alert("Erro ao carregar registro: " + error.message)
+    return
+  }
+
+  if(data){
+
+    setForm({
+      id: data.id,
+      nome: data.nome || "",
+      quadra_id: data.quadra_id || "",
+      lote_id: data.lote_id || "",
+      gaveta_id: data.gaveta_id || "",
+      funeraria_id: data.funeraria_id || "",
+      coveiro_id: data.coveiro_id || "",
+      data_nascimento: data.data_nascimento || "",
+      data_falecimento: data.data_falecimento || "",
+      data_sepultamento: data.data_sepultamento || "",
+      obito_entregue: data.obito_entregue || false,
+      observacoes: data.observacoes || ""
+    })
+
+  }
+
+}
   async function handleSalvar() {
     // 1. Validação básica (o "BeforePost")
     if (!form.nome || !form.quadra_id || !form.gaveta_id || !form.coveiro_id) {
@@ -160,34 +205,61 @@ export default function CadastroSepultamento() {
   const labelStyle = { fontWeight: '600', color: '#4a5568', fontSize: '0.85rem' }
 //  const inputStyle = { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '1rem', background: 'white' }
 const inputStyle = { 
-  padding: '10px', 
-  borderRadius: '6px', 
-  border: '1px solid #cbd5e0', 
-  fontSize: '1rem', 
-  background: 'white',
-  color: '#2d3748' // ADICIONE ISSO PARA FORÇAR A COR DO TEXTO
-}  
+  padding: '10px',
+  borderRadius: '6px',
+  border: '1px solid #cbd5e0',
+  fontSize: '1rem',
+  background: '#ffffff',
+  color: '#2d3748',
+  appearance: "none",
+  WebkitAppearance: "none"
+}
 const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allowed', color: '#a0aec0' }
 
   const localizacaoDefinida = form.quadra_id && form.lote_id && form.gaveta_id;
 
   return (
 <div className="pagina-rolavel" style={{ 
-      maxWidth: '1100px', 
+//      maxWidth: '1100px', 
+      maxWidth: isMobile ? "100%" : "1100px",
+      width: "100%",
+//      boxSizing: "border-box",
       margin: '0 auto', 
       padding: isMobile ? '10px 15px 120px 15px' : '20px', // Aumentamos o padding inferior no mobile
       fontFamily: 'sans-serif',
       overflowY: 'auto' // Reforço local do scroll
     }}>
-      <h2 style={{ color: '#2d3748', borderBottom: '2px solid #edf2f7', paddingBottom: '10px' }}>
-        {form.id ? `Editando: ${form.nome}` : "Novo Registro de Sepultamento"}
-      </h2>
+
+      <div style={{
+  marginTop: isMobile ? "4px" : "10px",
+  marginBottom: "10px"
+}}>
+
+  <h4 style={{
+    color: '#2d3748',
+    borderBottom: '1px solid #edf2f7',
+    paddingBottom: '6px',
+    fontSize: isMobile ? "15px" : "18px",
+    fontWeight: 600,
+    margin: 0,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis"
+  }}>
+
+    {form.id 
+      ? `Editando: ${form.nome}` 
+      : "Novo Registro de Sepultamento"}
+
+  </h4>
+
+</div>
       
       {/* Grid de Formulário (Mesma estrutura que definimos antes) */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', marginTop: '20px' }}>
         
         {/* COLUNA 1: LOCALIZAÇÃO */}
-        <div style={{ background: '#ffffff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#ffffff', padding: isMobile ? "10px" : "15px", borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#4a5568', fontSize: '1.1rem', borderLeft: '4px solid #4a90e2', paddingLeft: '10px' }}>1. Localização</h3>
           
           <div style={groupStyle}>
@@ -220,7 +292,7 @@ const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allow
         </div>
 
         {/* COLUNA 2: DADOS PESSOAIS */}
-        <div style={{ background: '#ffffff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#ffffff', padding: isMobile ? "10px" : "15px", borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#4a5568', fontSize: '1.1rem', borderLeft: '4px solid #4a90e2', paddingLeft: '10px' }}>2. Dados do Sepultamento</h3>
           
           <div style={groupStyle}>
@@ -263,7 +335,7 @@ const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allow
       </div>
 
       {/* OBSERVAÇÕES E BOTÕES */}
-      <div style={{ background: '#ffffff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginTop: '30px' }}>
+      <div style={{ background: '#ffffff', padding: isMobile ? "18px" : "25px", borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginTop: '30px' }}>
         <div style={groupStyle}>
           <label style={labelStyle}>OBSERVAÇÕES ADICIONAIS</label>
           <textarea name="observacoes" value={form.observacoes} onChange={handleChange} rows="3" style={{ ...inputStyle, resize: 'none' }} />
@@ -272,11 +344,7 @@ const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allow
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #edf2f7', paddingTop: '20px' }}>
           
           {/* BOTÃO EXCLUIR: Só aparece se estiver editando */}
-          {form.id ? (
-            <button onClick={handleExcluir} style={{ padding: '12px 20px', borderRadius: '6px', border: '1px solid #fc8181', background: '#fff5f5', color: '#e53e3e', fontWeight: 'bold', cursor: 'pointer' }}>
-              🗑️ EXCLUIR
-            </button>
-          ) : <div />}
+          
 
           <div style={{ display: 'flex', gap: '15px' }}>
             <button onClick={() => navigate("/sepultamentos")} style={{ padding: '12px 25px', borderRadius: '6px', border: '1px solid #cbd5e0', background: 'white', cursor: 'pointer' }}>CANCELAR</button>

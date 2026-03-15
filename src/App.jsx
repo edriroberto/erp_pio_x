@@ -62,6 +62,9 @@ function App() {
 
               <Route path="/cadastrar-sepultamento" element={<CadastroSepultamento />} />
 
+              <Route path="/cadastroSepultamento/:id" element={<CadastroSepultamento />}
+/>
+
             </Routes>
 
           </main>

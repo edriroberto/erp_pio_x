@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "../utils/supabaseClient"
+
 import Toolbar from "../components/Toolbar"
 import ContainerTabela from "../components/ContainerTabela"
+import SepultamentoList from "../components/SepultamentoList"
+import SepultamentoSearchBar from "../components/SepultamentoSearchBar"
+
 import "../styles/tabela.css"
 
 export default function Sepultamentos() {
 
   const [dados, setDados] = useState([])
+  const [dadosFiltrados, setDadosFiltrados] = useState([])
   const [selecionado, setSelecionado] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
@@ -27,11 +32,11 @@ export default function Sepultamentos() {
 
   }, [])
 
+  /* CARREGAR DADOS */
+
   useEffect(() => {
     carregar()
   }, [])
-
-  /* CARREGAR */
 
   async function carregar() {
 
@@ -53,6 +58,8 @@ export default function Sepultamentos() {
       }))
 
       setDados(dadosComIdade)
+      setDadosFiltrados(dadosComIdade)
+
     }
   }
 
@@ -83,6 +90,28 @@ export default function Sepultamentos() {
     const partes = data.split("-")
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`
+  }
+
+  /* BUSCA */
+
+  function buscar(texto) {
+
+    if (!texto) {
+      setDadosFiltrados(dados)
+      return
+    }
+
+    const t = texto.toLowerCase()
+
+    const filtrado = dados.filter(s =>
+      s.nome?.toLowerCase().includes(t) ||
+      s.quadra?.toLowerCase().includes(t) ||
+      s.lote?.toString().includes(t) ||
+      s.funeraria?.toLowerCase().includes(t)
+    )
+
+    setDadosFiltrados(filtrado)
+
   }
 
   /* AÇÕES */
@@ -133,123 +162,16 @@ export default function Sepultamentos() {
     carregar()
   }
 
-  /* CARD MOBILE */
-
-  const CartaoMobile = ({ s }) => {
-
-    const selecionadoCard = selecionado?.id === s.id
-
-    return (
-
-      <div
-        onClick={() => setSelecionado(s)}
-        style={{
-
-          background:'#fff',
-          borderRadius:'16px',
-          padding:'14px',
-          marginBottom:'12px',
-
-          boxShadow: selecionadoCard
-            ? '0 4px 14px rgba(52,152,219,0.25)'
-            : '0 1px 4px rgba(0,0,0,0.08)',
-
-          border: selecionadoCard
-            ? '2px solid #3498db'
-            : '2px solid transparent',
-
-          transition:'all .2s',
-          cursor:'pointer'
-        }}
-      >
-
-        {/* NOME */}
-
-        <div style={{
-          fontSize:16,
-          fontWeight:'600',
-          marginBottom:4
-        }}>
-          {s.nome}
-        </div>
-
-        {/* NASC / FALEC */}
-
-        <div style={{
-          fontSize:12,
-          color:'#666',
-          marginBottom:6
-        }}>
-          Nasc: {formatarData(s.data_nascimento)}
-          {" • "}
-          Falec: {formatarData(s.data_falecimento)}
-        </div>
-
-        {/* LOCAL */}
-
-        <div style={{
-          fontSize:13,
-          marginBottom:6
-        }}>
-          Quadra {s.quadra}
-          {" • "}
-          Lote {s.lote}/{s.gaveta}
-        </div>
-
-        {/* FUNERÁRIA + IDADE */}
-
-        <div style={{
-          display:'flex',
-          justifyContent:'space-between',
-          alignItems:'center',
-          fontSize:13
-        }}>
-
-          <span>
-            {s.funeraria}
-          </span>
-
-          <span style={{
-            fontSize:11,
-            padding:'3px 8px',
-            borderRadius:10,
-            background:'#eef3ff',
-            color:'#2b4c9b',
-            fontWeight:'600'
-          }}>
-            {s.idade} anos
-          </span>
-
-        </div>
-
-        {/* OBS */}
-
-        {s.observacoes && (
-
-          <div style={{
-            fontSize:12,
-            color:'#888',
-            marginTop:6
-          }}>
-            {s.observacoes}
-          </div>
-
-        )}
-
-      </div>
-
-    )
-  }
-
   /* RENDER */
 
   return (
 
     <div style={{
+      marginTop: "-15px",
       padding: isMobile ? "14px 10px" : "18px",
-      background:'#f2f2f7',
-      minHeight:'100vh',
-      fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
+      background: "#f2f2f7",
+      minHeight: "100vh",
+      fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
     }}>
 
       <Toolbar
@@ -257,19 +179,22 @@ export default function Sepultamentos() {
         onEditar={handleEditar}
         onExcluir={handleExcluir}
         itemSelecionado={selecionado}
+        mostrarFiltro={false}
+        fixa={true}
       />
+
+      <SepultamentoSearchBar onBuscar={buscar} />
 
       <ContainerTabela>
 
         {isMobile ? (
 
-          <div style={{paddingBottom:30}}>
-
-            {dados.map(s => (
-              <CartaoMobile key={s.id} s={s} />
-            ))}
-
-          </div>
+          <SepultamentoList
+            dados={dadosFiltrados}
+            selecionado={selecionado}
+            onSelecionar={setSelecionado}
+            formatarData={formatarData}
+          />
 
         ) : (
 
@@ -298,7 +223,7 @@ export default function Sepultamentos() {
 
               <tbody>
 
-                {dados.map((s) => {
+                {dadosFiltrados.map((s) => {
 
                   const selecionadoLinha = selecionado?.id === s.id
 
@@ -326,7 +251,7 @@ export default function Sepultamentos() {
                       <td>{formatarData(s.data_sepultamento)}</td>
                       <td>{s.idade}</td>
                       <td>{s.funeraria}</td>
-                      <td style={{fontSize:12,color:"#666"}}>
+                      <td style={{ fontSize: 12, color: "#666" }}>
                         {s.observacoes}
                       </td>
 
@@ -344,14 +269,13 @@ export default function Sepultamentos() {
         )}
 
       </ContainerTabela>
+
       <style>{`
         .linha-tabela:hover{
           background-color:#f7fafc !important;
         }
-        `}
-        </style>
+      `}</style>
 
     </div>
-
   )
 }

@@ -1,34 +1,36 @@
 import { useState, useEffect } from "react"
 import { supabase } from "../utils/supabaseClient"
+import { useNavigate } from "react-router-dom"
 
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
+BarChart,
+Bar,
+XAxis,
+YAxis,
+CartesianGrid,
+Tooltip,
+ResponsiveContainer,
+Cell
 } from "recharts"
 
-import ContainerTabela from "../components/ContainerTabela"
 import DashboardCard from "../components/DashboardCard"
+import SepultamentoCard from "../components/SepultamentoCard"
 
 export default function Dashboard(){
 
+const navigate = useNavigate()
 const [grafico,setGrafico] = useState([])
 const [ultimos,setUltimos] = useState([])
 
 const [totais,setTotais] = useState({
-  sepultamentos:0,
-  falecimentos:0,
-  pendentes:0
+sepultamentos:0,
+falecimentos:0,
+pendentes:0
 })
 
 const [isMobile,setIsMobile] = useState(window.innerWidth <= 768)
 
-const CORES = [
+const CORES=[
 "#4a90e2","#f5a623","#f35d22","#50e3c2",
 "#34a853","#ea4335","#fbbc05","#607d8b",
 "#9c27b0","#ff6b6b","#00bcd4","#795548"
@@ -38,26 +40,31 @@ useEffect(()=>{
 
 carregar()
 
-const resize = ()=> setIsMobile(window.innerWidth <=768)
+const resize=()=> setIsMobile(window.innerWidth<=768)
 
 window.addEventListener("resize",resize)
 
-return ()=> window.removeEventListener("resize",resize)
+return()=> window.removeEventListener("resize",resize)
 
 },[])
 
+function abrirCadastro(id){
+
+  navigate(`/cadastroSepultamento/${id}`)
+
+}
 
 async function carregar(){
 
 try{
 
-const [
+const[
 g,
 s,
 f,
 p,
 l
-] = await Promise.all([
+]=await Promise.all([
 
 supabase.from("vw_dash_sepultamentos_12_meses").select("*"),
 
@@ -71,23 +78,21 @@ supabase
 .from("vw_sepultamentos_v1")
 .select("*")
 .order("data_falecimento",{ascending:false})
-.limit(10)
+.limit(5)
 
 ])
 
-/* gráfico */
-
 if(g.data){
 
-const dados = g.data.map((item,index)=>{
+const dados=g.data.map((item,index)=>{
 
-const [ano,mes] = item.mes.split("-")
-const data = new Date(ano,mes-1)
+const [ano,mes]=item.mes.split("-")
+const data=new Date(ano,mes-1)
 
 return{
 mes:data.toLocaleDateString("pt-BR",{month:"short"}),
 total:item.total,
-cor: CORES[index % CORES.length]
+cor:CORES[index % CORES.length]
 }
 
 })
@@ -96,8 +101,6 @@ setGrafico(dados)
 
 }
 
-/* cards */
-
 setTotais({
 
 sepultamentos:s.data?.total || 0,
@@ -105,8 +108,6 @@ falecimentos:f.data?.total || 0,
 pendentes:p.data?.total || 0
 
 })
-
-/* tabela */
 
 setUltimos(l.data || [])
 
@@ -118,11 +119,29 @@ console.error("Erro dashboard:",e)
 
 }
 
+function calcularIdade(dataNascimento,dataFalecimento){
+
+if(!dataNascimento || !dataFalecimento) return ""
+
+const nasc=new Date(dataNascimento)
+const falec=new Date(dataFalecimento)
+
+let idade=falec.getFullYear()-nasc.getFullYear()
+
+const m=falec.getMonth()-nasc.getMonth()
+
+if(m<0 || (m===0 && falec.getDate()<nasc.getDate()))
+idade--
+
+return idade
+
+}
+
 function formatar(data){
 
 if(!data) return ""
 
-const p = data.split("-")
+const p=data.split("-")
 
 return `${p[2]}/${p[1]}/${p[0]}`
 
@@ -139,68 +158,80 @@ background:"#f5f6fa",
 fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
 }}>
 
-<h2 style={{marginBottom:20}}>Dashboard</h2>
+<h2 style={{marginBottom:16}}>Dashboard</h2>
 
 
-{/* CARDS */}
+{/* KPIs */}
 
 <div style={{
 display:"grid",
-gridTemplateColumns:isMobile ? "1fr" : "repeat(3,1fr)",
-gap:14,
-marginBottom:20
+gridTemplateColumns:"repeat(3,1fr)",
+gap:10,
+marginBottom:16
 }}>
 
 <DashboardCard
 titulo="Sepultamentos"
 valor={totais.sepultamentos}
+cor="#4a90e2"
 />
 
 <DashboardCard
 titulo="Falecimentos"
 valor={totais.falecimentos}
+cor="#34a853"
 />
 
 <DashboardCard
-titulo="Óbitos Pendentes"
+titulo="Pendentes"
 valor={totais.pendentes}
-cor="#ff6b6b"
+cor="#ea4335"
 />
 
 </div>
 
 
-{/* CONTAINER COM ROLAGEM */}
+{/* CONTAINER ROLAGEM */}
 
-<div
-  style={{
-    flex: 1,
-    minHeight: 0,
-    overflowY: "auto",
-    overflowX: "hidden",
-    paddingRight: 6
-  }}
->
+<div style={{
+flex:1,
+overflowY:"auto",
+overflowX:"hidden",
+paddingRight:4
+}}>
 
-{/* GRAFICO */}
+
+{/* GRÁFICO */}
 
 <div style={{
 background:"#fff",
 borderRadius:14,
-padding:16,
-marginBottom:25,
+padding:12,
+marginBottom:16,
 boxShadow:"0 2px 6px rgba(0,0,0,0.06)"
 }}>
 
-<h4 style={{marginBottom:10}}>
+<div style={{
+fontSize:14,
+fontWeight:600,
+marginBottom:8
+}}>
 Sepultamentos últimos 12 meses
-</h4>
+</div>
 
-<div style={{height:220}}>
+<div style={{height:160}}>
 
 <ResponsiveContainer width="100%" height="100%">
 
-<BarChart data={grafico}>
+<BarChart
+  data={grafico}
+  margin={{
+    top: 5,
+    right: 20,
+    left: -25,
+    bottom: 0
+  }}
+>
 
 <CartesianGrid strokeDasharray="3 3" vertical={false}/>
 
@@ -227,78 +258,31 @@ Sepultamentos últimos 12 meses
 </div>
 
 
-{/* TABELA */}
+{/* LISTA DE CARDS */}
 
-<h3 style={{marginBottom:10}}>
+<div style={{fontWeight:600,marginBottom:8}}>
 Últimos Sepultamentos
-</h3>
-
-<ContainerTabela>
-
-<table className="tabela">
-
-<thead>
-
-<tr>
-
-<th>Nome</th>
-<th>Quadra</th>
-<th>Lote</th>
-<th>Falecimento</th>
-<th>Sepultamento</th>
-<th>Funerária</th>
-<th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody>
+</div>
 
 {ultimos.map(s=>(
 
-<tr key={s.id}>
-
-<td style={{fontWeight:500}}>
-{s.nome}
-</td>
-
-<td>{s.quadra}</td>
-
-<td>{s.lote}/{s.gaveta}</td>
-
-<td>{formatar(s.data_falecimento)}</td>
-
-<td>{formatar(s.data_sepultamento)}</td>
-
-<td>{s.funeraria}</td>
-
-<td>
-
-<span style={{
-padding:"4px 8px",
-borderRadius:10,
-fontSize:12,
-fontWeight:600,
-background:s.obito_entregue ? "#e8f5e9" : "#fff3cd",
-color:s.obito_entregue ? "#2e7d32" : "#856404"
-}}>
-
-{s.obito_entregue ? "Entregue" : "Pendente"}
-
-</span>
-
-</td>
-
-</tr>
+<SepultamentoCard
+key={s.id}
+dado={{
+nome:s.nome,
+nascimento:formatar(s.data_nascimento),
+falecimento:formatar(s.data_falecimento),
+quadra:s.quadra,
+lote:s.lote,
+gaveta:s.gaveta,
+funeraria:s.funeraria,
+idade:calcularIdade(s.data_nascimento, s.data_falecimento),
+obito_entregue:Boolean(s.obito_entregue),
+observacoes:s.observacoes
+}}onClick={()=>abrirCadastro(s.id)}
+/>
 
 ))}
-
-</tbody>
-
-</table>
-
-</ContainerTabela>
 
 </div>
 
