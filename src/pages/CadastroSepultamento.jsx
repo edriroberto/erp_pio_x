@@ -158,8 +158,16 @@ export default function CadastroSepultamento() {
   // Estilos
   const groupStyle = { display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }
   const labelStyle = { fontWeight: '600', color: '#4a5568', fontSize: '0.85rem' }
-  const inputStyle = { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '1rem', background: 'white' }
-  const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allowed', color: '#a0aec0' }
+//  const inputStyle = { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '1rem', background: 'white' }
+const inputStyle = { 
+  padding: '10px', 
+  borderRadius: '6px', 
+  border: '1px solid #cbd5e0', 
+  fontSize: '1rem', 
+  background: 'white',
+  color: '#2d3748' // ADICIONE ISSO PARA FORÇAR A COR DO TEXTO
+}  
+const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allowed', color: '#a0aec0' }
 
   const localizacaoDefinida = form.quadra_id && form.lote_id && form.gaveta_id;
 

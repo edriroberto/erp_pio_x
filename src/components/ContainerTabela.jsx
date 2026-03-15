@@ -1,17 +1,23 @@
-import React from 'react';
-
 export default function ContainerTabela({ children }) {
+
   return (
-    <div style={{
-     height: "calc(100vh - 200px)", 
-      //height: "600px)", // Calcula: Tela total menos espaço do Header/Filtros
-      overflow: "auto",
-      border: "1px solid #ccc",
-      borderRadius: "4px",
-      marginTop: "10px",
-      background: "#fff"
-    }}>
+
+    <div
+      style={{
+        width: "100%",
+        overflowX: "auto",
+        overflowY: "auto",
+        maxHeight: "420px",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        background: "#fff"
+      }}
+    >
+
       {children}
+
     </div>
+
   )
+
 }
