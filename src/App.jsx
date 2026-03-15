@@ -12,6 +12,7 @@ import Coveiros from "./pages/Coveiros"
 import Quadras from "./pages/Quadras"
 import Lotes from "./pages/Lotes"
 import Funerarias from "./pages/Funerarias"
+import CadastroSepultamento from "./pages/CadastroSepultamento"
 
 
 function App() {
@@ -27,18 +28,19 @@ function App() {
 <div style={{ 
           flex: 1, 
           display: "flex", 
-          flexDirection: "column"
+          flexDirection: "column",
+          minWidth: 0   // 🔥 ESSENCIAL para scroll horizontal funcionar
         }}>
 
 
           <Header />
 
 <main style={{ 
-            flex: 1, 
-            padding: 20, 
-            overflowY: "auto" // Só esta parte vai rolar se o conteúdo for grande
-          }}>
-
+  flex: 1, 
+  padding: 20, 
+  overflowY: "auto", 
+  overflowX: "hidden" // O main não rola pros lados, só a tabela-container
+}}>
             <Routes>
 
               <Route path="/" element={<Dashboard />} />
@@ -56,6 +58,8 @@ function App() {
               <Route path="/quadras" element={<Quadras />} />
 
               <Route path="/lotes" element={<Lotes />} />
+
+              <Route path="/cadastrar-sepultamento" element={<CadastroSepultamento />} />
 
             </Routes>
 

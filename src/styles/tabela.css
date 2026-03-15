@@ -1,33 +1,49 @@
-.tabela-container{
-/*  overflow-x:auto; */
-width: 100%;
+.tabela-container {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 60vh;
+  display: block;
+  border: 1px solid #ddd;
+  border-radius: 8px;
 }
 
-.tabela{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
+.tabela {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  table-layout: fixed;
 }
 
-/* No seu arquivo tabela.css */
-/* Cabeçalho Fixo */
+.tabela td, .tabela th {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  background-color: white;
+  white-space: nowrap;
+}
+
+/* HEADER FIXO */
 .tabela thead th {
   position: sticky;
   top: 0;
-  background: #f1f2f6; /* Cor de fundo obrigatória para não transparecer */
-  z-index: 10; 
-  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  padding: 8px;
-  border-bottom: 2px solid #ccc;
-  color: #333;
+  background: white;
+  z-index: 3;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.1);
 }
 
-.tabela td{
-  padding:5px 8px;
-  border-bottom:1px solid #eee;
+/* PRIMEIRA COLUNA FIXA */
+.tabela th:first-child,
+.tabela td:first-child {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
 }
 
-.tabela tr:hover{
-  background:#f9f9f9;
+/* INTERSEÇÃO HEADER + COLUNA */
+.tabela thead th:first-child {
+  z-index: 4;
 }
