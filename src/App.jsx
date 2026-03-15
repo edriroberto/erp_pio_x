@@ -38,10 +38,11 @@ function App() {
 <main style={{ 
   flex: 1, 
   padding: 20, 
-  overflowY: "auto", 
-  overflowX: "hidden" // O main não rola pros lados, só a tabela-container
-}}>
-            <Routes>
+  overflow: "hidden", // 🔥 Mude para hidden para matar a barra externa
+  display: "flex", 
+  flexDirection: "column",
+  backgroundColor: "#f4f7f6" // Cor de fundo opcional para contraste
+}}>            <Routes>
 
               <Route path="/" element={<Dashboard />} />
 

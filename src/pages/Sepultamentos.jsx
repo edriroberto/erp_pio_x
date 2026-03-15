@@ -13,8 +13,7 @@ export default function Sepultamentos() {
 
   const navigate = useNavigate()
 
-
-  /* ---------------- RESPONSIVIDADE ---------------- */
+  /* RESPONSIVO */
 
   useEffect(() => {
 
@@ -28,13 +27,11 @@ export default function Sepultamentos() {
 
   }, [])
 
-
-  /* ---------------- CARREGAR DADOS ---------------- */
-
   useEffect(() => {
     carregar()
   }, [])
 
+  /* CARREGAR */
 
   async function carregar() {
 
@@ -59,8 +56,7 @@ export default function Sepultamentos() {
     }
   }
 
-
-  /* ---------------- REGRAS DE NEGÓCIO ---------------- */
+  /* REGRAS */
 
   function calcularIdade(dataNasc, dataFalec) {
 
@@ -80,7 +76,6 @@ export default function Sepultamentos() {
     return idade
   }
 
-
   function formatarData(data) {
 
     if (!data) return ""
@@ -90,8 +85,7 @@ export default function Sepultamentos() {
     return `${partes[2]}/${partes[1]}/${partes[0]}`
   }
 
-
-  /* ---------------- AÇÕES DA TOOLBAR ---------------- */
+  /* AÇÕES */
 
   const handleInserir = () => {
     navigate("/cadastrar-sepultamento")
@@ -100,7 +94,7 @@ export default function Sepultamentos() {
   const handleEditar = () => {
 
     if (!selecionado) {
-      alert("Selecione um registro para editar.")
+      alert("Selecione um registro.")
       return
     }
 
@@ -109,16 +103,15 @@ export default function Sepultamentos() {
     })
   }
 
-
   const handleExcluir = async () => {
 
     if (!selecionado) {
-      alert("Selecione um registro para excluir.")
+      alert("Selecione um registro.")
       return
     }
 
     const confirmou = window.confirm(
-      `⚠️ DESEJA EXCLUIR DEFINITIVAMENTE: ${selecionado.nome}?`
+      `Excluir definitivamente ${selecionado.nome}?`
     )
 
     if (!confirmou) return
@@ -129,85 +122,135 @@ export default function Sepultamentos() {
       .eq("id", selecionado.id)
 
     if (error) {
-      alert("Erro ao excluir: " + error.message)
+      alert("Erro: " + error.message)
       return
     }
 
-    alert("Registro removido com sucesso!")
+    alert("Registro excluído!")
 
     setSelecionado(null)
 
     carregar()
   }
 
-
-  /* ---------------- CARD MOBILE ---------------- */
+  /* CARD MOBILE */
 
   const CartaoMobile = ({ s }) => {
 
-    const isSelected = selecionado?.id === s.id
+    const selecionadoCard = selecionado?.id === s.id
 
     return (
 
       <div
         onClick={() => setSelecionado(s)}
         style={{
-          background: "#fff",
-          borderRadius: "10px",
-          padding: "15px",
-          marginBottom: "12px",
-          borderLeft: isSelected
-            ? "6px solid #3498db"
-            : "6px solid #2f3542",
-          boxShadow: isSelected
-            ? "0 4px 12px rgba(52,152,219,0.25)"
-            : "0 2px 4px rgba(0,0,0,0.05)",
-          transform: isSelected ? "scale(1.01)" : "scale(1)",
-          transition: "all .2s",
-          cursor: "pointer"
+
+          background:'#fff',
+          borderRadius:'16px',
+          padding:'14px',
+          marginBottom:'12px',
+
+          boxShadow: selecionadoCard
+            ? '0 4px 14px rgba(52,152,219,0.25)'
+            : '0 1px 4px rgba(0,0,0,0.08)',
+
+          border: selecionadoCard
+            ? '2px solid #3498db'
+            : '2px solid transparent',
+
+          transition:'all .2s',
+          cursor:'pointer'
         }}
       >
 
+        {/* NOME */}
+
         <div style={{
-          fontSize: 18,
-          fontWeight: "bold",
-          marginBottom: 5
+          fontSize:16,
+          fontWeight:'600',
+          marginBottom:4
         }}>
           {s.nome}
         </div>
 
-        <div style={{
-          fontSize: 13,
-          color: "#666",
-          marginBottom: 8
-        }}>
-          📅 {formatarData(s.data_sepultamento)} | 🎂 {s.idade} anos
-        </div>
+        {/* NASC / FALEC */}
 
         <div style={{
-          padding: "8px 0",
-          borderTop: "1px solid #eee"
+          fontSize:12,
+          color:'#666',
+          marginBottom:6
         }}>
-          <strong>LOCAL:</strong> Q:{s.quadra} - L:{s.lote} - G:{s.gaveta}
+          Nasc: {formatarData(s.data_nascimento)}
+          {" • "}
+          Falec: {formatarData(s.data_falecimento)}
         </div>
 
+        {/* LOCAL */}
+
         <div style={{
-          fontSize: 13,
-          color: "#555"
+          fontSize:13,
+          marginBottom:6
         }}>
-          Funerária: {s.funeraria}
+          Quadra {s.quadra}
+          {" • "}
+          Lote {s.lote}/{s.gaveta}
         </div>
+
+        {/* FUNERÁRIA + IDADE */}
+
+        <div style={{
+          display:'flex',
+          justifyContent:'space-between',
+          alignItems:'center',
+          fontSize:13
+        }}>
+
+          <span>
+            {s.funeraria}
+          </span>
+
+          <span style={{
+            fontSize:11,
+            padding:'3px 8px',
+            borderRadius:10,
+            background:'#eef3ff',
+            color:'#2b4c9b',
+            fontWeight:'600'
+          }}>
+            {s.idade} anos
+          </span>
+
+        </div>
+
+        {/* OBS */}
+
+        {s.observacoes && (
+
+          <div style={{
+            fontSize:12,
+            color:'#888',
+            marginTop:6
+          }}>
+            {s.observacoes}
+          </div>
+
+        )}
 
       </div>
+
     )
   }
 
-
-  /* ---------------- RENDER ---------------- */
+  /* RENDER */
 
   return (
 
-    <div style={{ padding: "0 10px" }}>
+    <div style={{
+      padding: isMobile ? "14px 10px" : "18px",
+      background:'#f2f2f7',
+      minHeight:'100vh',
+      fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
+    }}>
 
       <Toolbar
         onInserir={handleInserir}
@@ -220,10 +263,12 @@ export default function Sepultamentos() {
 
         {isMobile ? (
 
-          <div style={{ paddingBottom: 20 }}>
+          <div style={{paddingBottom:30}}>
+
             {dados.map(s => (
               <CartaoMobile key={s.id} s={s} />
             ))}
+
           </div>
 
         ) : (
@@ -236,25 +281,16 @@ export default function Sepultamentos() {
 
                 <tr>
 
-                  <th style={{ width: 300 }}>Nome</th>
-
-                  <th style={{ width: 120 }}>Quadra</th>
-
-                  <th style={{ width: 80 }}>Lote</th>
-
-                  <th style={{ width: 100 }}>Gaveta</th>
-
-                  <th style={{ width: 110 }}>Nascimento</th>
-
-                  <th style={{ width: 110 }}>Falecimento</th>
-
-                  <th style={{ width: 110 }}>Sepultamento</th>
-
-                  <th style={{ width: 70 }}>Idade</th>
-
-                  <th style={{ width: 120 }}>Funerária</th>
-
-                  <th style={{ width: 350 }}>Observações</th>
+                  <th>Nome</th>
+                  <th>Quadra</th>
+                  <th>Lote</th>
+                  <th>Gaveta</th>
+                  <th>Nascimento</th>
+                  <th>Falecimento</th>
+                  <th>Sepultamento</th>
+                  <th>Idade</th>
+                  <th>Funerária</th>
+                  <th>Observações</th>
 
                 </tr>
 
@@ -264,7 +300,7 @@ export default function Sepultamentos() {
 
                 {dados.map((s) => {
 
-                  const isSelected = selecionado?.id === s.id
+                  const selecionadoLinha = selecionado?.id === s.id
 
                   return (
 
@@ -273,38 +309,24 @@ export default function Sepultamentos() {
                       onClick={() => setSelecionado(s)}
                       style={{
                         cursor: "pointer",
-                        backgroundColor: isSelected
-                          ? "#ebf8ff"
-                          : "transparent",
-                        color: isSelected
-                          ? "#2b6cb0"
-                          : "inherit",
-                        fontWeight: isSelected
-                          ? 600
-                          : 400
+                        backgroundColor: selecionadoLinha ? "#ebf8ff" : "transparent",
+                        color: selecionadoLinha ? "#2b6cb0" : "inherit",
+                        fontWeight: selecionadoLinha ? "600" : "400",
+                        transition: "background-color .2s"
                       }}
                       className="linha-tabela"
                     >
 
-                      <td style={{ fontWeight: 500 }}>{s.nome}</td>
-
+                      <td style={{ fontWeight: '500' }}>{s.nome}</td>
                       <td>{s.quadra}</td>
-
                       <td>{s.lote}</td>
-
                       <td>{s.gaveta}</td>
-
                       <td>{formatarData(s.data_nascimento)}</td>
-
                       <td>{formatarData(s.data_falecimento)}</td>
-
                       <td>{formatarData(s.data_sepultamento)}</td>
-
                       <td>{s.idade}</td>
-
                       <td>{s.funeraria}</td>
-
-                      <td style={{ fontSize: 12, color: "#666" }}>
+                      <td style={{fontSize:12,color:"#666"}}>
                         {s.observacoes}
                       </td>
 
@@ -322,14 +344,14 @@ export default function Sepultamentos() {
         )}
 
       </ContainerTabela>
-
-
       <style>{`
-        .linha-tabela:hover {
-          background-color: #f7fafc !important;
+        .linha-tabela:hover{
+          background-color:#f7fafc !important;
         }
-      `}</style>
+        `}
+        </style>
 
     </div>
+
   )
 }

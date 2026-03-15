@@ -45,5 +45,5 @@
 
 /* INTERSEÇÃO HEADER + COLUNA */
 .tabela thead th:first-child {
-  z-index: 4;
+  z-index: 3;
 }

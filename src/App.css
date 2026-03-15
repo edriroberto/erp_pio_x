@@ -12,26 +12,18 @@ body {
 
 /* --- REGRAS PARA O PC (Desktop) --- */
 @media (min-width: 769px) {
-  /* MATAR o menu mobile no PC */
-  .nav-mobile-bottom {
-    display: none !important;
-  }
-
-  .sidebar-desktop {
-    display: block !important;
-  }
+  .nav-mobile-bottom { display: none !important; }
+  .sidebar-desktop { display: block !important; }
 }
 
 /* --- REGRAS PARA O CELULAR (iPhone) --- */
 @media (max-width: 768px) {
-  /* MATAR o menu lateral no Celular */
   .sidebar-desktop {
     display: none !important;
     width: 0 !important;
     min-width: 0 !important;
   }
 
-  /* CONFIGURAR A BARRA INFERIOR */
   .nav-mobile-bottom {
     display: flex !important;
     position: fixed !important;
@@ -58,26 +50,91 @@ body {
     opacity: 0.7;
   }
 
-  .mobile-link.active {
-    opacity: 1;
-    font-weight: bold;
-  }
+  .mobile-link.active { opacity: 1; font-weight: bold; }
 
-  /* AJUSTE DO CONTEÚDO PARA NÃO FICAR ATRÁS DA BARRA */
   main, .conteudo-principal, #center, .layout-container {
-    margin-left: 0 !important;
+margin-left: 0 !important;
     width: 100% !important;
     padding: 10px !important;
-    padding-bottom: 100px !important; /* Espaço para não cobrir a tabela */
+    padding-bottom: 120px !important; /* Espaço extra para não sumir atrás do menu inferior */
     box-sizing: border-box !important;
-  }
+    
+    /* ADICIONE ESTAS LINHAS ABAIXO */
+    overflow-y: auto !important; /* Força o scroll vertical */
+    height: 100vh !important;    /* Garante que o container ocupe a tela toda para rolar */
+    -webkit-overflow-scrolling: touch; /* Melhora o scroll no iPhone */
+    }
 }
 
-/* Seus outros estilos de cards e gráficos podem vir abaixo sem problema */
 .card-estatistica {
   background: #fff;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   text-align: center;
+}
+
+/* --- ESTILOS PARA TABELAS COM CABEÇALHO FIXO (SISTEMA DE GESTÃO) --- */
+
+/* 1. Container que permite o scroll independente */
+.coluna-scroll-container {
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2. Título da Seção (Ex: Quadras, Lotes de...) */
+/* Use esta classe no seu <h2> apenas nas páginas que precisam dele fixo */
+.titulo-secao-fixo {
+  position: sticky !important;
+  top: 0 !important;
+  background-color: #ffffff !important;
+  z-index: 25 !important; /* Acima do cabeçalho da tabela */
+  margin: 0 !important;
+  padding: 20px 0 !important;
+  font-size: 1.5rem !important; /* Fonte maior conforme solicitado */
+  color: #2d3436;
+}
+
+/* 3. Ajuste da Tabela para aceitar Sticky */
+.tabela-container {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* 4. Cabeçalho da Tabela (Ex: Nome, Lote, Tipo) */
+.tabela-container thead th {
+  position: sticky !important;
+  /* Este valor (74px) é a soma da altura aproximada do seu H2 + Paddings */
+  top: 74px !important; 
+  background-color: #ffffff !important;
+  z-index: 20 !important;
+  padding: 15px 12px !important; /* Mais "respiro" no cabeçalho */
+  text-align: left;
+  font-size: 1.1rem;
+  color: #636e72;
+  border-bottom: 2px solid #dfe6e9 !important;
+  box-shadow: 0 2px 2px -1px rgba(0,0,0,0.05);
+}
+
+/* 5. Linhas da Tabela - Aumentando o espaçamento entre registros */
+.tabela-container tbody td {
+  padding: 18px 12px !important; /* Aumenta o espaço vertical (seta vermelha da imagem) */
+  font-size: 1.1rem; /* Fonte maior para leitura clara */
+  border-bottom: 1px solid #f1f2f6;
+  color: #2d3436;
+}
+
+/* 6. Espaçamento horizontal entre colunas específicas (Lote e Tipo) */
+/* Aplica um recuo na segunda coluna em diante para não ficarem grudadas */
+.tabela-container td:nth-child(2), 
+.tabela-container th:nth-child(2) {
+  padding-left: 40px !important;
+}
+
+/* Efeito Hover global para tabelas do sistema */
+.tabela-container tbody tr:hover {
+  background-color: #f7fafc !important;
 }

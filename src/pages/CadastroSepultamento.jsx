@@ -164,11 +164,17 @@ export default function CadastroSepultamento() {
   const localizacaoDefinida = form.quadra_id && form.lote_id && form.gaveta_id;
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '20px auto', padding: '0 20px', fontFamily: 'sans-serif' }}>
+<div className="pagina-rolavel" style={{ 
+      maxWidth: '1100px', 
+      margin: '0 auto', 
+      padding: isMobile ? '10px 15px 120px 15px' : '20px', // Aumentamos o padding inferior no mobile
+      fontFamily: 'sans-serif',
+      overflowY: 'auto' // Reforço local do scroll
+    }}>
       <h2 style={{ color: '#2d3748', borderBottom: '2px solid #edf2f7', paddingBottom: '10px' }}>
         {form.id ? `Editando: ${form.nome}` : "Novo Registro de Sepultamento"}
       </h2>
-
+      
       {/* Grid de Formulário (Mesma estrutura que definimos antes) */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', marginTop: '20px' }}>
         

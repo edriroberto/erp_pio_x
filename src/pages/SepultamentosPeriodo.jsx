@@ -230,6 +230,13 @@ export default function SepultamentosPeriodo() {
           </div>
         )}
       </ContainerTabela>
+        <style>{`
+          .linha-tabela:hover{
+            background-color:#f7fafc !important;
+          }
+          `}
+        </style>
     </div>
   )
+  
 }
