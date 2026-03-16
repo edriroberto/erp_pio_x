@@ -99,9 +99,10 @@ export default function SepultamentosPeriodo() {
         flexDirection: isMobile ? "column" : "row",
         justifyContent: "space-between", 
         alignItems: isMobile ? "flex-start" : "center",
-        marginBottom: 15
+        marginBottom: 5,
+        marginTop: 2,
       }}>
-        <h2 style={{ margin: 0 }}>Por período</h2>
+        <h3 style={{ margin: 0 }}>Por período</h3>
         <p style={{ fontSize: "14px", color: "#666", marginTop: isMobile ? 5 : 0, marginBottom: isMobile ? 5 : 0 }}>
           {formatarData(dataDe)} até {formatarData(dataAte)}
         </p>
@@ -109,17 +110,17 @@ export default function SepultamentosPeriodo() {
 
       {/* FILTROS RESPONSIVOS - AJUSTADO */}
 <div style={{ 
-  marginBottom: 20, 
+  marginBottom: 5, 
   display: "flex", 
   flexDirection: isMobile ? "column" : "row",
   alignItems: isMobile ? "stretch" : "flex-end", // Alinha o botão pela base no PC
-  gap: 15,
+  gap: 30,
   background: "#f9f9f9",
   padding: "5px",
   borderRadius: "8px",
   border: "1px solid #eee"
 }}>
-  <div style={{ display: 'flex', gap: 15, flexWrap: 'wrap' }}>
+  <div style={{ display: 'flex', gap: 25, flexWrap: 'wrap' }}>
     <div style={{ width: isMobile ? '100%' : '160px' }}>
       <label style={{ fontSize: 12, fontWeight: 'bold', display: 'block', marginBottom: 5 }}>De:</label>
       <input

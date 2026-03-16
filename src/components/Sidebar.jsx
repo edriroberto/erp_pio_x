@@ -11,8 +11,11 @@ export default function Sidebar() {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
 
-    // Pega o usuário logado
-    supabase.auth.getSession().then(res => setUser(res.data.session?.user));
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user ?? null);
+    };
+    getSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -24,100 +27,98 @@ export default function Sidebar() {
     };
   }, []);
 
-  async function handleLogout() {
+  const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
-  }
+  };
 
-  const estiloPC = {
-    container: {
-      width: 260,
-      minWidth: 260,
-      background: "#2f3542",
-      color: "#fff",
-      height: "100vh",
-      padding: 20,
-      flexShrink: 0,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-    },
-    item: {
-      display: "block",
-      padding: "10px",
-      color: "#fff",
-      textDecoration: "none",
-      borderRadius: 4,
-      marginBottom: 5,
-    },
-    ativo: { background: "#57606f" },
-    usuario: { marginBottom: 20, fontSize: 14, fontWeight: 500, color: "#f1f2f6" },
-    logout: {
-      padding: 10,
-      background: "#ea4335",
-      color: "#fff",
-      border: "none",
-      borderRadius: 4,
-      cursor: "pointer",
-      marginTop: 10,
-    },
+  const navLinks = [
+    { to: "/", label: "Início", icon: "🏠" },
+    { to: "/sepultamentos", label: "Sepultamentos", icon: "⚰️" },
+    { to: "/sepultamentos-nome", label: "Por nome", icon: "🔍" },
+    { to: "/sepultamentos-periodo", label: "Por período", icon: "📅" },
+    { to: "/quadras", label: "Quadras e Lotes", icon: "🗺️" },
+    { to: "/funerarias", label: "Funerárias", icon: "🏢" },
+    { to: "/coveiros", label: "Coveiros", icon: "🧑‍🌾" },
+  ];
+
+  const sidebarStyle = {
+    width: 260,
+    minWidth: 260,
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    padding: 20,
+    background: "#2f3542",
+    color: "#fff",
+    boxSizing: "border-box", // ADICIONE ISSO: impede que o padding "estique" a sidebar
+  };
+
+  const navStyle = {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    gap: 5,
+    overflowY: "auto",
+  };
+
+  const itemStyle = (isActive) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 15px",
+    borderRadius: 4,
+    textDecoration: "none",
+    color: "#fff",
+    background: isActive ? "#57606f" : "transparent",
+  });
+
+  const userStyle = {
+    marginBottom: 20,
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#f1f2f6",
+  };
+
+  const logoutStyle = {
+    padding: 10,
+    background: "#ea4335",
+    color: "#fff",
+    border: "none",
+    borderRadius: 4,
+    cursor: "pointer",
+    width: "100%",
+    marginTop: "auto", // garante que fique fixo na parte inferior
   };
 
   if (isMobile) {
     return (
-      <nav className="nav-mobile-bottom">
-        <NavLink to="/" className="mobile-link">
-          🏠<span>Início</span>
-        </NavLink>
-        <NavLink to="/sepultamentos" className="mobile-link">
-          ⚰️<span>Sepultar</span>
-        </NavLink>
-        <NavLink to="/quadras" className="mobile-link">
-          🗺️<span>Quadras</span>
-        </NavLink>
+      <nav className="nav-mobile-bottom" style={{ display: "flex", justifyContent: "space-around" }}>
+        {navLinks.slice(0, 3).map((link) => (
+          <NavLink key={link.to} to={link.to} className="mobile-link">
+            {link.icon} <span>{link.label}</span>
+          </NavLink>
+        ))}
         <button onClick={handleLogout} className="mobile-link" style={{ color: "red" }}>
-          🚪<span>Sair</span>
+          🚪 <span>Sair</span>
         </button>
       </nav>
     );
   }
 
   return (
-    <aside style={estiloPC.container} className="sidebar-desktop">
-      <div>
-        <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 30 }}>ERP Cemitério</div>
-        {user && <div style={estiloPC.usuario}>👤 {user.email}</div>}
-        <nav style={{ display: "flex", flexDirection: "column" }}>
-          <NavLink to="/" style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}>
-            Início
+    <aside style={sidebarStyle}>
+      <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 30 }}>ERP Cemitério</div>
+      {user ? <div style={userStyle}>👤 {user.email}</div> : <div style={userStyle}>🔒 Não logado</div>}
+      <nav style={navStyle}>
+        {navLinks.map((link) => (
+          <NavLink key={link.to} to={link.to} style={({ isActive }) => itemStyle(isActive)}>
+            <span>{link.icon}</span>
+            <span>{link.label}</span>
           </NavLink>
-          <NavLink to="/sepultamentos" style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}>
-            Sepultamentos
-          </NavLink>
-          <NavLink
-            to="/sepultamentos-nome"
-            style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}
-          >
-            Por nome
-          </NavLink>
-          <NavLink
-            to="/sepultamentos-periodo"
-            style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}
-          >
-            Por período
-          </NavLink>
-          <NavLink to="/quadras" style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}>
-            Quadras e Lotes
-          </NavLink>
-          <NavLink to="/funerarias" style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}>
-            Funerárias
-          </NavLink>
-          <NavLink to="/coveiros" style={({ isActive }) => ({ ...estiloPC.item, ...(isActive ? estiloPC.ativo : {}) })}>
-            Coveiros
-          </NavLink>
-        </nav>
-      </div>
-      <button onClick={handleLogout} style={estiloPC.logout}>
+        ))}
+      </nav>
+      <button onClick={handleLogout} style={logoutStyle}>
         Sair
       </button>
     </aside>

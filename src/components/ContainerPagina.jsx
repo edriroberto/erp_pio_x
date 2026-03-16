@@ -9,7 +9,8 @@ export default function ContainerPagina({ titulo, children }) {
         flexDirection: "column",
         gap: "16px",
         width: "100%",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        
       }}
     >
 

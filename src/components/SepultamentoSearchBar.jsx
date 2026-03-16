@@ -23,8 +23,8 @@ export default function SepultamentoSearchBar({ onBuscar }) {
   return (
 
     <div style={{
-      marginBottom: 12,
-      marginTop: 10,
+      marginBottom: 7,
+      marginTop: 5,
       background: "#fff",
       border: "1px solid #e2e8f0",
       borderRadius: 8,
@@ -55,7 +55,8 @@ export default function SepultamentoSearchBar({ onBuscar }) {
           fontSize: 14,
           background: "transparent",
           textTransform: "uppercase",
-          color: "#000" // 🔥 define a cor do texto
+          color: "#000", // 🔥 define a cor do texto
+          
         }}
       />
 
