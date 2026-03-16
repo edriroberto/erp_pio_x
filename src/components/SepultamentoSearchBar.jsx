@@ -54,7 +54,8 @@ export default function SepultamentoSearchBar({ onBuscar }) {
           outline: "none",
           fontSize: 14,
           background: "transparent",
-          textTransform: "uppercase"
+          textTransform: "uppercase",
+          color: "#000" // 🔥 define a cor do texto
         }}
       />
 
