@@ -24,6 +24,7 @@ export default function SepultamentoSearchBar({ onBuscar }) {
 
     <div style={{
       marginBottom: 12,
+      marginTop: 10,
       background: "#fff",
       border: "1px solid #e2e8f0",
       borderRadius: 8,

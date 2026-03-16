@@ -69,11 +69,11 @@ export default function Quadras() {
 
     <div
       style={{
-        padding: isMobile ? 12 : 20,
+        padding: isMobile ? 5 : 5,
         background:"#f2f2f7",
         display:"flex",
         flexDirection: isMobile ? "column" : "row",
-        gap:20,
+        gap:10,
         height:"100%"
       }}
     >
@@ -83,13 +83,14 @@ export default function Quadras() {
 
       <div
         style={{
-          flex:1,
+          flex: isMobile ? "0 0 auto" : 1,
           background:"#fff",
           borderRadius:12,
-          padding:16,
+          padding:15,
           display:"flex",
           flexDirection:"column",
-          minHeight:0
+          minHeight: isMobile ? 200 : 0
+          
         }}
       >
 
@@ -98,7 +99,9 @@ export default function Quadras() {
         <div
           style={{
             overflowY:"auto",
-            flex:1
+            flex:1,
+            maxHeight: isMobile ? 180 : "100%",
+            marginTop: "-10px"
           }}
         >
 
@@ -158,10 +161,11 @@ export default function Quadras() {
           display:"flex",
           flexDirection:"column",
           minHeight:0
+          
         }}
       >
 
-        <h2 style={{marginBottom:10}}>
+        <h2 style={{marginBottom:5}}>
           {quadraSelecionada
             ? `Lotes de ${quadraSelecionada.nome}`
             : "Selecione uma quadra"}

@@ -78,7 +78,7 @@ supabase
 .from("vw_sepultamentos_v1")
 .select("*")
 .order("data_falecimento",{ascending:false})
-.limit(5)
+.limit(15)
 
 ])
 
