@@ -46,6 +46,7 @@ export default function Sidebar() {
   const navLinks = [
     { to: "/", label: "Início"},
     { to: "/sepultamentos", label: "Sepultamentos"},
+    
     { to: "/sepultamentos-nome", label: "Por nome"},
     { to: "/sepultamentos-periodo", label: "Por período"},
     { to: "/quadras", label: "Quadras e Lotes"},
@@ -103,19 +104,23 @@ export default function Sidebar() {
   };
 
   if (isMobile) {
-    return (
-      <nav className="nav-mobile-bottom" style={{ display: "flex", justifyContent: "space-around" }}>
-        {navLinks.slice(0, 3).map((link) => (
+  return (
+    <nav className="nav-mobile-bottom" style={{ display: "flex", justifyContent: "space-around" }}>
+      {/* Filtramos para incluir apenas os índices 1, 2 e 5 */}
+      {navLinks
+        .filter((_, index) => [0, 1, 4].includes(index))
+        .map((link) => (
           <NavLink key={link.to} to={link.to} className="mobile-link">
             {link.icon} <span>{link.label}</span>
           </NavLink>
-        ))}
-        <button onClick={handleLogout} className="mobile-link" style={{ color: "red" }}>
-          🚪 <span>Sair</span>
-        </button>
-      </nav>
-    );
-  }
+        ))}     
+      
+     <button onClick={handleLogout} className="mobile-link" style={{ color: "red" }}>
+        🚪 <span>Sair</span>
+      </button>
+    </nav>
+  );
+}
 
   return (
     <aside style={sidebarStyle}>

@@ -61,8 +61,7 @@ export default function App() {
 
                 <Route path="/lotes" element={<Lotes />}/>
 
-                {/* ... demais rotas privadas */}
-
+                
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
