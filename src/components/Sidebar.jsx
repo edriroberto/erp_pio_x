@@ -32,6 +32,7 @@ export default function Sidebar() {
     navigate("/login");
   };
 
+  {/*
   const navLinks = [
     { to: "/", label: "Início", icon: "🏠" },
     { to: "/sepultamentos", label: "Sepultamentos", icon: "⚰️" },
@@ -40,6 +41,16 @@ export default function Sidebar() {
     { to: "/quadras", label: "Quadras e Lotes", icon: "🗺️" },
     { to: "/funerarias", label: "Funerárias", icon: "🏢" },
     { to: "/coveiros", label: "Coveiros", icon: "🧑‍🌾" },
+  ];
+*/}
+  const navLinks = [
+    { to: "/", label: "Início"},
+    { to: "/sepultamentos", label: "Sepultamentos"},
+    { to: "/sepultamentos-nome", label: "Por nome"},
+    { to: "/sepultamentos-periodo", label: "Por período"},
+    { to: "/quadras", label: "Quadras e Lotes"},
+    { to: "/funerarias", label: "Funerárias"},
+    { to: "/coveiros", label: "Coveiros"},
   ];
 
   const sidebarStyle = {

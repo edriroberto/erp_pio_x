@@ -57,7 +57,7 @@ export default function App() {
                 <Route path="/coveiros" element={<Coveiros />}/>
                 <Route path="/lotes" element={<Lotes />}/>
                 <Route path="/cadastrar-sepultamento" element={<CadastroSepultamento />}/>
-                <Route path="/cadastosepultamento" element={<CadastroSepultamento />}/>
+                <Route path="/cadastroSepultamento/:id" element={<CadastroSepultamento />}/>
 
                 <Route path="/lotes" element={<Lotes />}/>
 
