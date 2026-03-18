@@ -12,6 +12,7 @@ export default function Quadras() {
   const [showModal, setShowModal] = useState(false);
   const [showUploadFoto, setShowUploadFoto] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const [novoLote, setNovoLote] = useState({ id: null, numero: "", tipo_id: "", capacidade: 1, foto_url: "" });
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -33,16 +34,18 @@ export default function Quadras() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Gerar nome único para evitar cache ou sobreposição
+    setLoading(true);
     const fileName = `${Date.now()}_${file.name}`;
     const { error } = await supabase.storage.from("lotes").upload(fileName, file);
 
-    if (error) return alert("Erro ao enviar imagem: " + error.message);
+    if (error) {
+      setLoading(false);
+      return alert("Erro ao enviar imagem: " + error.message);
+    }
 
     const { data } = supabase.storage.from("lotes").getPublicUrl(fileName);
-    
-    // Atualiza o estado local para visualização prévia
     setNovoLote(prev => ({ ...prev, foto_url: data.publicUrl }));
+    setLoading(false);
   }
 
   // ========================
@@ -70,11 +73,10 @@ export default function Quadras() {
 
     if (error) return console.error(error);
     setLotes(data || []);
-    if (lotesScrollRef.current) lotesScrollRef.current.scrollTop = 0;
   }
 
   // ========================
-  // 🔹 AÇÕES DE MODAL
+  // 🔹 AÇÕES
   // ========================
   function prepararEdicao(lote) {
     setModoEdicao(true);
@@ -82,13 +84,12 @@ export default function Quadras() {
       id: lote.id,
       numero: lote.numero,
       tipo_id: lote.tipo_id,
-      capacidade: lote.capacity_gavetas,
+      capacidade: lote.capacidade_gavetas,
       foto_url: lote.foto_url || ""
     });
     setShowModal(true);
   }
 
-  // Abre o pop-up específico de foto (o "atalho" pela miniatura)
   function abrirPopupFoto(lote) {
     setLoteSelecionado(lote);
     setModoEdicao(true);
@@ -113,21 +114,17 @@ export default function Quadras() {
       foto_url: novoLote.foto_url
     };
 
-    let erroSalvar = null;
     let idLoteProcessado = novoLote.id;
 
     if (modoEdicao) {
       const { error } = await supabase.from("lotes").update(dadosLote).eq("id", novoLote.id);
-      erroSalvar = error;
+      if (error) return alert(error.message);
     } else {
       const { data, error } = await supabase.from("lotes").insert([dadosLote]).select().single();
-      erroSalvar = error;
+      if (error) return alert(error.message);
       idLoteProcessado = data?.id;
     }
 
-    if (erroSalvar) return alert("Erro ao salvar: " + erroSalvar.message);
-
-    // Sincroniza gavetas no banco
     await supabase.rpc('sincronizar_capacidade_lote', {
       p_lote_id: idLoteProcessado,
       p_nova_capacidade: parseInt(novoLote.capacidade)
@@ -146,15 +143,17 @@ export default function Quadras() {
 
   return (
     <div style={{
-      padding: isMobile ? "5px" : "10px 20px 10px 10px",
+      padding: isMobile ? "5px" : "10px",
       background: "#f2f2f7",
       display: "flex",
       flexDirection: isMobile ? "column" : "row",
       gap: 10,
-      height: "100vh"
+      height: isMobile ? "auto" : "100vh",
+      minHeight: "100vh",
+      overflowX: "hidden"
     }}>
 
-      {/* PAINEL ESQUERDO: QUADRAS */}
+      {/* PAINEL QUADRAS */}
       <div style={{
         flex: isMobile ? "0 0 auto" : 1,
         background: "#fff",
@@ -162,38 +161,30 @@ export default function Quadras() {
         padding: 12,
         display: "flex",
         flexDirection: "column",
-        minHeight: isMobile ? 200 : 0
+        height: isMobile ? "150px" : "auto",
+        minHeight: isMobile ? 120 : 0,
+        marginBottom: isMobile ? 5 : 0 // Pequeno respiro entre os painéis
       }}>
-
-        <h2 style={{ fontSize: "1rem", marginBottom: 8 }}>Quadras</h2>
-        <div style={{overflowY:"auto",
-             flex:1,
-              maxHeight: isMobile ? 180 : "100%",
-              marginTop: "-10px" }}
-        >
+        <h2 style={{ fontSize: "0.9rem", marginBottom: 5 }}>Quadras</h2>
+        <div style={{ overflowY: "auto",  flex: 1,
+              border: isMobile ? "1px solid #eee" : "none", // Borda leve para separar no mobile
+              borderRadius: 6 }}>
           <table className="tabela">
             <tbody>
-              {quadras.map(q => {
-                const sel = quadraSelecionada?.id === q.id;
-                return (
-                  <tr key={q.id} onClick={() => carregarLotes(q)} style={{
-                    cursor: "pointer",
-                    background: sel ? "#e8f2ff" : "transparent",
-                    color: sel ? "#1a73e8" : "inherit"
-                  }}>
-                    <td style={{ 
-                      fontWeight: sel ? "600" : "400",
-                      fontSize: "15px", // Fonte reduzida aqui
-                      padding: "6px 8px"}}>{q.nome}</td>
-                  </tr>
-                );
-              })}
+              {quadras.map(q => (
+                <tr key={q.id} onClick={() => carregarLotes(q)} style={{
+                  cursor: "pointer",
+                  background: quadraSelecionada?.id === q.id ? "#e8f2ff" : "transparent"
+                }}>
+                  <td style={{ fontSize: "13px", padding: "6px 8px" }}>{q.nome}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* PAINEL DIREITO: LOTES */}
+      {/* PAINEL LOTES */}
       <div style={{
         flex: 3,
         background: "#fff",
@@ -201,182 +192,116 @@ export default function Quadras() {
         padding: 12,
         display: "flex",
         flexDirection: "column",
-        marginRight: isMobile ? 0 : 20 // Espaço solicitado no lado direito
+        marginRight: isMobile ? 0 : 20,
+        height: isMobile ? "65vh" : "auto",
+        overflow: "hidden"
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", 
-              alignItems: "center", marginBottom: 12, marginRight: isMobile ? 2 : 150, padding: "15" }}>
-            <h2 style={{fontSize: "1rem", margin: 0}}>
-              {quadraSelecionada ? `Lotes de ${quadraSelecionada.nome}` : "Selecione uma quadra"}
-            </h2>
-
+        
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h2 style={{ fontSize: "1rem" }}>{quadraSelecionada ? quadraSelecionada.nome : "Selecione"}</h2>
           {quadraSelecionada && (
             <div style={{ display: "flex", gap: 6 }}>
-              {loteSelecionado && (
-                <button onClick={() => prepararEdicao(loteSelecionado)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #1a73e8", color: "#1a73e8", background: "#fff", cursor: "pointer", fontWeight: "600" }}>
-                  Editar Lote
-                </button>
-              )}
-              <button onClick={() => { setModoEdicao(false); setShowModal(true); }} style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: "#1a73e8", color: "#fff", cursor: "pointer", fontWeight: "600" }}>
-                + Novo Lote
-              </button>
+              {loteSelecionado && <button onClick={() => prepararEdicao(loteSelecionado)} className="btn-edit">Editar</button>}
+              <button onClick={() => { setModoEdicao(false); setShowModal(true); }} className="btn-new">+ Novo</button>
             </div>
           )}
         </div>
 
         {quadraSelecionada && (
-          <div ref={lotesScrollRef} style={{ overflowY: "auto", flex: 1 }}>
+          <div className="tabela-container">
             <table className="tabela">
               <thead>
                 <tr>
-                  <th style={{ fontSize: "12px" }}>Lote</th>
-                  <th style={{ fontSize: "12px" }}>Tipo</th>
-                  <th style={{ width: 50, textAlign: "center", fontSize: "12px" }}>Vagas</th>
-                  <th style={{ width: 50, textAlign: "center", fontSize: "12px" }}>Foto</th>
+                  <th>Lote</th>
+                  <th>Tipo</th>
+                  <th style={{ textAlign: "center" }}>Vagas</th>
+                  <th style={{ textAlign: "center" }}>Foto</th>
                 </tr>
               </thead>
               <tbody>
-                {lotes.map(l => {
-                  const sel = loteSelecionado?.id === l.id;
-                  return (
-                    <tr key={l.id} 
-                        onClick={() => setLoteSelecionado(l)} 
-                        onDoubleClick={() => prepararEdicao(l)}
-                        style={{
-                          background: sel ? "#f0f7ff" : "transparent",
-                          color: sel ? "#1a73e8" : "inherit",
-                          cursor: "pointer"
-                        }}>
-                      <td style={{ fontWeight: sel ? "600" : "400", fontSize: "14px", padding: "6px 8px" }}>{l.numero}</td>
-                      <td style={{ fontSize: "14px", padding: "6px 8px" }}>{l.tipos_lote?.descricao}</td>
-                      <td style={{ textAlign: "center", fontSize: "14px", padding: "6px 8px" }}>{l.capacidade_gavetas}</td>
-                      <td style={{ textAlign: "center", padding: "4px" }} onClick={(e) => { e.stopPropagation(); abrirPopupFoto(l); }}>
-                        {l.foto_url ? (
-                          <img src={l.foto_url} alt="Lote" style={{ width: 38, height: 38, borderRadius: 6, objectFit: "cover", border: "1px solid #ddd" }} />
-                        ) : (
-                          <span style={{ fontSize: "1.2rem", opacity: 0.5 }}>📷</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {lotes.map(l => (
+                  <tr key={l.id} onClick={() => setLoteSelecionado(l)} onDoubleClick={() => prepararEdicao(l)}
+                      style={{ background: loteSelecionado?.id === l.id ? "#f0f7ff" : "transparent" }}>
+                    <td style={{ fontWeight: loteSelecionado?.id === l.id ? "600" : "400" }}>{l.numero}</td>
+                    <td>{l.tipos_lote?.descricao}</td>
+                    <td style={{ textAlign: "center" }}>{l.capacidade_gavetas}</td>
+                    <td style={{ textAlign: "center" }} onClick={(e) => { e.stopPropagation(); abrirPopupFoto(l); }}>
+                      {l.foto_url ? <img src={l.foto_url} style={{ width: 28, height: 28, borderRadius: 4, objectFit: "cover" }} /> : "📷"}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
-      {/* MODAL: CADASTRO COMPLETO */}
-      {showModal && (
+      {/* MODAL FOTO */}
+      {showUploadFoto && (
         <div className="modal-overlay">
-          <div className="modal-box" style={{ width: isMobile ? "90%" : 400 }}>
-            <h3>{modoEdicao ? "Editar Lote" : "Novo Lote"}</h3>
-            
-            <label>Número do Lote:</label>
-            <input type="text" value={novoLote.numero} onChange={e => setNovoLote({ ...novoLote, numero: e.target.value })} />
-            
-            <label>Tipo de Construção:</label>
-            <select value={novoLote.tipo_id} onChange={e => setNovoLote({ ...novoLote, tipo_id: e.target.value })}>
-              <option value="">Selecione...</option>
-              {tiposLote.map(t => <option key={t.id} value={t.id}>{t.descricao}</option>)}
-            </select>
-
-            <label>Quantidade de Gavetas:</label>
-            <input type="number" value={novoLote.capacidade} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} />
-
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              <button onClick={fecharModais} style={{ flex: 1, padding: 12, background: "#eee", border: "none", borderRadius: 8, cursor: "pointer" }}>Cancelar</button>
-              <button onClick={handleSalvarLote} style={{ flex: 1, padding: 12, background: "#1a73e8", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: "600" }}>Salvar</button>
+          <div className="modal-box" style={{ width: 320, textAlign: "center" }}>
+            <h3 style={{ fontSize: "1rem" }}>Foto: Lote {loteSelecionado?.numero}</h3>
+            <div className="preview-foto">
+              {loading ? "Enviando..." : novoLote.foto_url ? <img src={novoLote.foto_url} /> : "Sem foto"}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <label className="label-camera">
+                📸 Tirar Foto
+                <input type="file" accept="image/*" capture="environment" onChange={handleUpload} style={{ display: "none" }} />
+              </label>
+              <label className="label-galeria">
+                🖼️ Galeria
+                <input type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} />
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 15 }}>
+              <button onClick={fecharModais} className="btn-cancel">Fechar</button>
+              <button onClick={handleSalvarLote} className="btn-save">Salvar</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: POP-UP DE FOTO */}
-{showUploadFoto && (
-  <div className="modal-overlay">
-    <div className="modal-box" style={{ width: 340, textAlign: "center" }}>
-      <h3 style={{ marginBottom: 15, fontSize: "1rem" }}>Foto do Lote {loteSelecionado?.numero}</h3>
-      
-      <div style={{ 
-        margin: "0 auto 15px", 
-        width: "100%", 
-        height: 180, 
-        background: "#f9f9f9", 
-        borderRadius: 10, 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
-        overflow: "hidden", 
-        border: "1px solid #ddd" 
-      }}>
-        {novoLote.foto_url ? (
-          <img src={novoLote.foto_url} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-        ) : (
-          <span style={{ color: "#999", fontSize: "12px" }}>Nenhuma foto</span>
-        )}
-      </div>
+      {/* MODAL DADOS */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ width: 320 }}>
+            <h3>{modoEdicao ? "Editar Lote" : "Novo Lote"}</h3>
+            <label>Número:</label>
+            <input type="text" value={novoLote.numero} onChange={e => setNovoLote({ ...novoLote, numero: e.target.value })} />
+            <label>Tipo:</label>
+            <select value={novoLote.tipo_id} onChange={e => setNovoLote({ ...novoLote, tipo_id: e.target.value })}>
+              <option value="">Selecione...</option>
+              {tiposLote.map(t => <option key={t.id} value={t.id}>{t.descricao}</option>)}
+            </select>
+            <label>Vagas:</label>
+            <input type="number" value={novoLote.capacidade} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} />
+            <div style={{ display: "flex", gap: 8, marginTop: 15 }}>
+              <button onClick={fecharModais} className="btn-cancel">Sair</button>
+              <button onClick={handleSalvarLote} className="btn-save">Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* OPÇÕES DE CARREGAMENTO */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-        
-        {/* BOTÃO PARA TIRAR FOTO (CÂMERA) */}
-        <label style={{ 
-          background: "#34c759", color: "#fff", padding: "10px", borderRadius: 8, 
-          cursor: "pointer", fontSize: "13px", fontWeight: "600", display: "block" 
-        }}>
-          📸 Tirar Foto Agora
-          <input 
-            type="file" 
-            accept="image/*" 
-            capture="environment" 
-            onChange={handleUpload} 
-            style={{ display: "none" }} 
-          />
-        </label>
-
-        {/* BOTÃO PARA ESCOLHER ARQUIVO (GALERIA) */}
-        <label style={{ 
-          background: "#f2f2f7", color: "#555", padding: "10px", borderRadius: 8, 
-          cursor: "pointer", fontSize: "13px", border: "1px solid #ddd", display: "block" 
-        }}>
-          🖼️ Escolher da Galeria
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={handleUpload} 
-            style={{ display: "none" }} 
-          />
-        </label>
-      </div>
-
-      <div style={{ display: "flex", gap: 10 }}>
-        <button onClick={fecharModais} style={{ flex: 1, padding: 10, background: "#eee", border: "none", borderRadius: 8, fontSize: "13px" }}>Fechar</button>
-        <button onClick={handleSalvarLote} style={{ flex: 1, padding: 10, background: "#1a73e8", color: "#fff", border: "none", borderRadius: 8, fontWeight: "600", fontSize: "13px" }}>Salvar Foto</button>
-      </div>
-    </div>
-  </div>
-)}
-
-      {/* ESTILOS INTERNOS */}
       <style jsx>{`
-        .modal-overlay { 
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-          background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; 
-        }
-        .modal-box { 
-          background: #fff; padding: 25px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; 
-          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .modal-box label { font-size: 0.85rem; font-weight: 600; color: #555; margin-top: 5px; text-align: left; }
-        .modal-box input, .modal-box select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        
-        .tabela { width: 100%; border-collapse: collapse; }
-        .tabela th { text-align: left; padding: 12px 8px; border-bottom: 2px solid #eee; color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tabela td { padding: 12px 8px; border-bottom: 1px solid #f0f0f5; font-size: 0.95rem; }
-        
-        h2 { color: #333; }
+        .tabela-container { overflow: auto; height: 100%; width: 100%; -webkit-overflow-scrolling: touch; }
+        .tabela { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; table-layout: fixed; }
+        .tabela td, .tabela th { padding: 6px 10px; border-bottom: 1px solid #eee; background: white; white-space: nowrap; }
+        .tabela thead th { position: sticky; top: 0; z-index: 3; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .tabela th:first-child, .tabela td:first-child { position: sticky; left: 0; z-index: 2; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #fff; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .preview-foto { height: 160px; background: #f9f9f9; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px dashed #ccc; }
+        .preview-foto img { width: 100%; height: 100%; object-fit: contain; }
+        .label-camera { background: #34c759; color: #fff; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; }
+        .label-galeria { background: #f2f2f7; color: #555; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid #ddd; text-align: center; }
+        .btn-new { background: #1a73e8; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .btn-edit { background: #fff; color: #1a73e8; border: 1px solid #1a73e8; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .btn-save { background: #1a73e8; color: #fff; border: none; flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; }
+        .btn-cancel { background: #eee; border: none; flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; }
+        input, select { padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
       `}</style>
-
     </div>
   );
 }
