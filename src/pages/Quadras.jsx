@@ -66,7 +66,13 @@ export default function Quadras() {
 
   function prepararEdicao(lote) {
     setModoEdicao(true);
-    setNovoLote({ id: lote.id, numero: lote.numero, tipo_id: lote.tipo_id, capacidade: lote.capacidade_gavetas, foto_url: lote.foto_url || "" });
+    setNovoLote({ 
+      id: lote.id, 
+      numero: lote.numero, 
+      tipo_id: lote.tipo_id, 
+      capacidade: lote.capacidade_gavetas, 
+      foto_url: lote.foto_url || "" 
+    });
     setShowModal(true);
   }
 
@@ -76,32 +82,60 @@ export default function Quadras() {
     setShowUploadFoto(true);
   }
 
+  // FUNÇÃO REFEITA COM A LÓGICA DE SINCRONIZAÇÃO (DELPHI SERVICE)
   async function handleSalvarLote() {
-    if (!quadraSelecionada) return;
-    const dadosLote = {
-      numero: novoLote.numero,
-      quadra_id: quadraSelecionada.id,
-      tipo_id: parseInt(novoLote.tipo_id),
-      capacidade_gavetas: parseInt(novoLote.capacidade),
-      foto_url: novoLote.foto_url
-    };
+    if (!quadraSelecionada && !showUploadFoto) return;
+    
+    setLoading(true);
+    const capacidadeNum = parseInt(novoLote.capacidade);
 
-    if (showUploadFoto) {
-        // Se estiver salvando apenas a foto
+    try {
+      if (showUploadFoto) {
+        // Apenas foto
         const { error } = await supabase.from("lotes").update({ foto_url: novoLote.foto_url }).eq("id", loteSelecionado.id);
-        if (error) return alert(error.message);
-    } else {
-        // Se estiver salvando dados gerais
-        if (modoEdicao) {
-            await supabase.from("lotes").update(dadosLote).eq("id", novoLote.id);
-        } else {
-            const { data } = await supabase.from("lotes").insert([dadosLote]).select().single();
-            await supabase.rpc('sincronizar_capacidade_lote', { p_lote_id: data.id, p_nova_capacidade: parseInt(novoLote.capacidade) });
-        }
-    }
+        if (error) throw error;
+      } else {
+        const dadosLote = {
+          numero: novoLote.numero,
+          quadra_id: quadraSelecionada.id,
+          tipo_id: parseInt(novoLote.tipo_id),
+          capacidade_gavetas: capacidadeNum,
+          foto_url: novoLote.foto_url
+        };
 
-    fecharModais();
-    carregarLotes(quadraSelecionada);
+        if (modoEdicao) {
+          // 1. Alterar Lote (Equivalente ao LoteService.AlterarLote)
+          const { error: errorUpdate } = await supabase.from("lotes").update(dadosLote).eq("id", novoLote.id);
+          if (errorUpdate) throw errorUpdate;
+
+          // 2. Sincronizar Capacidade (Equivalente ao LoteService.SincronizarCapacidade)
+          const { error: errorRpc } = await supabase.rpc('sincronizar_capacidade_lote', { 
+            p_lote_id: novoLote.id, 
+            p_nova_capacidade: capacidadeNum 
+          });
+          if (errorRpc) throw errorRpc;
+
+        } else {
+          // Criar Lote (Equivalente ao LoteService.CriarLote)
+          const { data, error: errorInsert } = await supabase.from("lotes").insert([dadosLote]).select().single();
+          if (errorInsert) throw errorInsert;
+
+          // Sincronizar as gavetas iniciais para o novo lote
+          const { error: errorRpcNew } = await supabase.rpc('sincronizar_capacidade_lote', { 
+            p_lote_id: data.id, 
+            p_nova_capacidade: capacidadeNum 
+          });
+          if (errorRpcNew) throw errorRpcNew;
+        }
+      }
+
+      fecharModais();
+      carregarLotes(quadraSelecionada);
+    } catch (err) {
+      alert("Erro ao processar: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function fecharModais() {
@@ -109,6 +143,7 @@ export default function Quadras() {
     setShowUploadFoto(false);
     setModoEdicao(false);
     setNovoLote({ id: null, numero: "", tipo_id: "", capacidade: 1, foto_url: "" });
+    setLoading(false);
   }
 
   return (
@@ -144,8 +179,8 @@ export default function Quadras() {
           <h2 style={{ fontSize: "1.1rem" }}>{quadraSelecionada ? quadraSelecionada.nome : "Selecione"}</h2>
           {quadraSelecionada && (
             <div style={{ display: "flex", gap: 8 }}>
-              {loteSelecionado && <button onClick={() => prepararEdicao(loteSelecionado)} className="btn-edit">Editar</button>}
-              <button onClick={() => { setModoEdicao(false); setShowModal(true); }} className="btn-new">+ Novo</button>
+              {loteSelecionado && <button onClick={() => prepararEdicao(loteSelecionado)} className="btn-edit" disabled={loading}>Editar</button>}
+              <button onClick={() => { setModoEdicao(false); setShowModal(true); }} className="btn-new" disabled={loading}>+ Novo</button>
             </div>
           )}
         </div>
@@ -187,7 +222,7 @@ export default function Quadras() {
             <h3>Foto: Lote {loteSelecionado?.numero}</h3>
             
             <div className="preview-foto-vertical">
-              {loading ? "Enviando..." : novoLote.foto_url ? (
+              {loading ? "Processando..." : novoLote.foto_url ? (
                 <img src={novoLote.foto_url} alt="Preview" />
               ) : (
                 <div className="sem-foto-v">
@@ -230,12 +265,14 @@ export default function Quadras() {
               {tiposLote.map(t => <option key={t.id} value={t.id}>{t.descricao}</option>)}
             </select>
             
-            <label style={{ fontSize: "12px", color: "#666", marginTop: 10 }}>Capacidade de Vagas</label>
+            <label style={{ fontSize: "12px", color: "#666", marginTop: 10 }}>Capacidade de Vagas (Gavetas)</label>
             <input type="number" value={novoLote.capacidade} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} />
             
             <div className="modal-row-buttons" style={{ marginTop: 20 }}>
               <button onClick={fecharModais} className="btn-cancel">Cancelar</button>
-              <button onClick={handleSalvarLote} className="btn-save">Confirmar</button>
+              <button onClick={handleSalvarLote} className="btn-save" disabled={loading}>
+                {loading ? "Salvando..." : "Confirmar"}
+              </button>
             </div>
           </div>
         </div>
