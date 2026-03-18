@@ -1,0 +1,147 @@
+/* ==========================================================================
+   1. TABELAS (Design Compacto e Sticky)
+   ========================================================================== */
+.tabela-container { 
+  overflow: auto; 
+  height: 100%; 
+  width: 100%; 
+  -webkit-overflow-scrolling: touch; 
+}
+
+.tabela { 
+  width: max-content; 
+  min-width: 100%; 
+  border-collapse: separate; 
+  border-spacing: 0; 
+  font-size: 13px; 
+  table-layout: fixed; 
+}
+
+.tabela td, .tabela th { 
+  padding: 6px 10px; 
+  border-bottom: 1px solid #eee; 
+  background: white; 
+  white-space: nowrap; 
+}
+
+.tabela thead th { 
+  position: sticky; 
+  top: 0; 
+  z-index: 3; 
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+}
+
+.tabela th:first-child, .tabela td:first-child { 
+  position: sticky; 
+  left: 0; 
+  z-index: 2; 
+}
+
+/* ==========================================================================
+   2. ESTRUTURA DOS MODAIS
+   ========================================================================== */
+.modal-overlay { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.7); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000;
+  padding: 15px; /* Evita que o modal encoste na borda do celular */
+}
+
+/* Modal Padrão e Vertical */
+.modal-box, .modal-box-vertical { 
+  background: #fff; 
+  padding: 20px; 
+  border-radius: 16px; 
+  display: flex; 
+  flex-direction: column; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 340px; /* Largura máxima fixa para não esticar no PC */
+  box-sizing: border-box;
+}
+
+.modal-box-vertical h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  text-align: center;
+  color: #333;
+}
+
+/* ==========================================================================
+   3. ÁREA DE FOTO
+   ========================================================================== */
+.preview-foto-vertical {
+  width: 100%;
+  height: 380px; /* Altura fixa para manter a proporção de porta-retrato */
+  background: #f4f4f9;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.preview-foto-vertical img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+}
+
+.sem-foto-v {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+}
+
+/* ==========================================================================
+   4. BOTÕES E GRIDS
+   ========================================================================== */
+.modal-row-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.modal-row-buttons:last-child {
+  margin-bottom: 0;
+}
+
+.btn-captura-v {
+  flex: 1;
+  padding: 12px 5px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: opacity 0.2s;
+}
+
+.btn-captura-v.camera { background: #34c759; color: #fff; }
+.btn-captura-v.galeria { background: #f2f2f7; color: #555; border: 1px solid #ddd; }
+
+.btn-save { background: #1a73e8; color: #fff; border: none; flex: 1; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+.btn-cancel { background: #f1f1f1; color: #666; border: none; flex: 1; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+
+.btn-new { background: #1a73e8; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.btn-edit { background: #fff; color: #1a73e8; border: 1px solid #1a73e8; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+input, select { 
+  padding: 10px; 
+  border-radius: 8px; 
+  border: 1px solid #ddd; 
+  font-size: 14px; 
+  width: 100%;
+  box-sizing: border-box;
+}
