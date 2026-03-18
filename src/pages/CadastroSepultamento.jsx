@@ -314,7 +314,7 @@ const disabledStyle = { ...inputStyle, background: '#f7fafc', cursor: 'not-allow
           <option value="">SELECIONE...</option>
           {lotes.map((l) => (
             <option key={l.id} value={l.id}>
-              {l.numero} {l.tipos_lote?.descricao ? `(${l.tipos_lote.descricao})` : ""}
+              {l.numero} {l.tipos_lote?.descricao ? ` - ${l.tipos_lote.descricao}` : ""}
             </option>
           ))}
         </select>

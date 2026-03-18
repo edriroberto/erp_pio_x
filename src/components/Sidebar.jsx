@@ -49,7 +49,8 @@ export default function Sidebar() {
     
     { to: "/sepultamentos-nome", label: "Por nome"},
     { to: "/sepultamentos-periodo", label: "Por período"},
-    { to: "/quadras", label: "Quadras e Lotes"},
+    { to: "/quadras", label: "Quadras e Lotes"},    
+  
     { to: "/funerarias", label: "Funerárias"},
     { to: "/coveiros", label: "Coveiros"},
   ];

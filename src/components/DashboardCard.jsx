@@ -21,6 +21,7 @@ export default function DashboardCard({ titulo, valor, cor }) {
       </div>
 
       <div style={{
+        textAlign: "center",
         fontSize:14,
         fontWeight:600
       }}>
