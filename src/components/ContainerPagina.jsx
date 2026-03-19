@@ -10,14 +10,16 @@ export default function ContainerPagina({ titulo, children }) {
         gap: "16px",
         width: "100%",
         boxSizing: "border-box",
+        marginTop: -15,
         
       }}
     >
 
       {titulo && (
-        <h2 style={{ margin: 0 }}>
+        <h3 style={{ margin: 0 }}>
           {titulo}
-        </h2>
+        </h3>
+        
       )}
 
       {children}

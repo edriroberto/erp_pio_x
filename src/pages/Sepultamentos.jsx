@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom"
 import { supabase } from "../utils/supabaseClient"
 
 import Toolbar from "../components/Toolbar"
-import ContainerTabela from "../components/ContainerTabela"
 import SepultamentoList from "../components/SepultamentoList"
 import SepultamentoSearchBar from "../components/SepultamentoSearchBar"
+import ContainerPagina from "../components/ContainerPagina";
+import ContainerTabela from "../components/ContainerTabela";
+import "../styles/tabela.css"
+
 
 import "../styles/tabela.css"
 
@@ -107,26 +110,47 @@ export default function Sepultamentos() {
   }
 
   return (
-    <div style={{
-      marginTop: "-15px",
-      padding: isMobile ? "14px 10px" : "18px",
-      background: "#f2f2f7",
-      minHeight: "100vh",
-      fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
-    }}>
 
-      <Toolbar
-        onInserir={handleInserir}
-        onEditar={handleEditar}
-        onExcluir={handleExcluir}
-        itemSelecionado={selecionado}
-        mostrarFiltro={false}
-        fixa={true}
-      />
+    <ContainerPagina>
+{isMobile ? (
 
-      <SepultamentoSearchBar onBuscar={buscar} />
+  // 📱 MOBILE (como já estava)
+  <>
+    <h2 style={{ marginBottom: 5 }}>Sepultamentos</h2>
 
-      <ContainerTabela>
+    <Toolbar
+      onInserir={handleInserir}
+      onEditar={handleEditar}
+      onExcluir={handleExcluir}
+      itemSelecionado={selecionado}
+      mostrarFiltro={false}
+      fixa={true}
+    />
+  </>
+
+) : (
+  <div style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10
+  }}>
+    
+    <h2 style={{ margin: 0 }}>Sepultamentos</h2>
+
+    <Toolbar
+      onInserir={handleInserir}
+      onEditar={handleEditar}
+      onExcluir={handleExcluir}
+      itemSelecionado={selecionado}
+      mostrarFiltro={false}
+      fixa={false} // importante aqui
+    />
+
+  </div>
+)}
+
+     <ContainerTabela>
         {isMobile ? (
           <SepultamentoList
             dados={dadosFiltrados}
@@ -135,8 +159,8 @@ export default function Sepultamentos() {
             formatarData={formatarData}
           />
         ) : (
-          <div className="tabela-container">
-            <table className="tabela">
+          
+            <table className="tabela" style={{ minWidth: "max-content", minHeight: "max-content" }}>
               <thead>
                 <tr>
                   <th>Nome</th>
@@ -200,15 +224,14 @@ export default function Sepultamentos() {
                 })}
               </tbody>
             </table>
-          </div>
+        
         )}
+        
       </ContainerTabela>
+  
+   </ContainerPagina>
 
-      <style>{`
-        .linha-tabela:hover {
-          background-color: #f7fafc !important;
-        }
-      `}</style>
-    </div>
-  )
+ 
+)
+
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { supabase } from "../utils/supabaseClient"
-import ContainerTabela from "../components/ContainerTabela"
+import ContainerPagina from "../components/ContainerPagina";
+import ContainerTabela from "../components/ContainerTabela";
 import "../styles/tabela.css"
 
 export default function SepultamentosPorNome() {
@@ -81,9 +82,9 @@ export default function SepultamentosPorNome() {
   }
 
   return (
-    <div style={{ padding: isMobile ? "10px" : "5px" }}>
-      <h2 style={{ marginBottom: 15 }}>Consultar por Nome</h2>
-      <div style={{ marginBottom: 20, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: 10 }}>
+    <ContainerPagina titulo="Consulta por Nome">
+            
+      <div className="header-busca" style={{ flex: "0 0 auto" }}>
         <input
           type="text"
           placeholder="DIGITE O NOME..."
@@ -91,7 +92,7 @@ export default function SepultamentosPorNome() {
           onChange={(e) => setBusca(e.target.value.toUpperCase())}
           style={{ padding: "12px", width: isMobile ? "100%" : "320px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "16px", textTransform: "uppercase" }}
         />
-        <span style={{ fontSize: 14, color: "#666", fontWeight: 500 }}>
+        <span style={{ fontSize: 14, color: "#666", fontWeight: 500, marginLeft: "15px" }}>
           {dados.length} registros encontrados
         </span>
       </div>
@@ -102,7 +103,7 @@ export default function SepultamentosPorNome() {
             {dados.map(s => <CartaoMobileBusca key={s.id} s={s} />)}
           </div>
         ) : (
-          <div className="tabela-container">
+          
             <table className="tabela">
               <thead>
                 <tr>
@@ -147,9 +148,10 @@ export default function SepultamentosPorNome() {
                 })}
               </tbody>
             </table>
-          </div>
+          
         )}
       </ContainerTabela>
-    </div>
+ 
+    </ContainerPagina>
   )
 }

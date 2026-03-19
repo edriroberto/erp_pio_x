@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react"
 import { supabase } from "../utils/supabaseClient"
+import ContainerPagina from "../components/ContainerPagina";
+import ContainerTabela from "../components/ContainerTabela";
 import "../styles/tabela.css"
-import ContainerTabela from "../components/ContainerTabela"
+
 
 export default function SepultamentosPeriodo() {
   const [dataDe, setDataDe] = useState("")
@@ -79,13 +81,10 @@ export default function SepultamentosPeriodo() {
   }
 
   return (
-    <div style={{ padding: isMobile ? '10px' : '5px' }}>
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", marginBottom: 10 }}>
-        <h3 style={{ margin: 0 }}>Por período</h3>
-        <p style={{ fontSize: "14px", color: "#666", margin: 0 }}>{formatarData(dataDe)} até {formatarData(dataAte)}</p>
-      </div>
 
-      <div style={{ marginBottom: 15, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 15, background: "#f9f9f9", padding: "10px", borderRadius: "8px", border: "1px solid #eee" }}>
+<ContainerPagina titulo="Por período">    
+          
+      <div style={{ marginBottom: -15, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 15, background: "#f9f9f9", padding: "10px", borderRadius: "8px", border: "1px solid #eee" }}>
         <div style={{ display: 'flex', gap: 15 }}>
           <input type="date" value={dataDe} onChange={(e) => setDataDe(e.target.value)} style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }} />
           <input type="date" value={dataAte} onChange={(e) => setDataAte(e.target.value)} style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }} />
@@ -97,13 +96,12 @@ export default function SepultamentosPeriodo() {
 
       <ContainerTabela>
         {isMobile ? (
-          <div style={{ paddingBottom: '80px' }}>
-            <div style={{ textAlign: 'right', fontSize: 13, color: '#666', marginBottom: 10 }}>{dados.length} registros</div>
-            {dados.map(s => <CartaoMobilePeriodo key={s.id} s={s} />)}
+          <div style={{ paddingBottom: "80px" }}>
+            {dados.map(s => <CartaoMobileBusca key={s.id} s={s} />)}
           </div>
         ) : (
-          <div className="tabela-container">
-            <table className="tabela">
+          
+            <table className="tabela" style={{ minWidth: "1200px" }}>
               <thead>
                 <tr>
                   <th style={{ width: '300px' }}>Nome</th>
@@ -143,9 +141,11 @@ export default function SepultamentosPeriodo() {
                 })}
               </tbody>
             </table>
-          </div>
+          
         )}
       </ContainerTabela>
-    </div>
+      
+    
+    </ContainerPagina>
   )
 }
