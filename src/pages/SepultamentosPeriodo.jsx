@@ -2,25 +2,59 @@ import { useState, useEffect } from "react"
 import { supabase } from "../utils/supabaseClient"
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
-import "../styles/tabela.css"
+import { gerarRelatorioSepultamentos } from "../utils/relatorioPDF"; // Importando o serviço
+import "../styles/tabela.css";
 
+const styles = {
+  input: { 
+    padding: "8px", 
+    borderRadius: "4px", 
+    border: "1px solid #ccc", 
+  //  flex: 1 
+    width: "140px",
+  },
+  btnFiltrar: { 
+    padding: "10px 20px", 
+    backgroundColor: "#2c3e50", 
+    color: "white", 
+    border: "none", 
+    borderRadius: "4px", 
+    cursor: "pointer", 
+    fontWeight: "bold",
+    transition: "background 0.2s"
+  },
+  btnPdf: { 
+    padding: "10px 20px", 
+    backgroundColor: "#e74c3c", 
+    color: "white", 
+    border: "none", 
+    borderRadius: "4px", 
+    cursor: "pointer", 
+    fontWeight: "bold",
+    transition: "background 0.2s"
+  }
+}
 
 export default function SepultamentosPeriodo() {
   const [dataDe, setDataDe] = useState("")
   const [dataAte, setDataAte] = useState("")
   const [dados, setDados] = useState([])
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768)
     window.addEventListener("resize", handleResize)
+    
     const hoje = new Date()
     const tresMesesAtras = new Date()
     tresMesesAtras.setMonth(hoje.getMonth() - 3)
+    
     const dataFim = hoje.toISOString().split("T")[0]
     const dataInicio = tresMesesAtras.toISOString().split("T")[0]
     setDataDe(dataInicio); setDataAte(dataFim)
     carregarDados(dataInicio, dataFim)
+    
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
@@ -32,8 +66,9 @@ export default function SepultamentosPeriodo() {
     if (m < 0 || (m === 0 && falec.getDate() < nasc.getDate())) idade--
     return idade
   }
-
+  
   async function carregarDados(inicio, fim) {
+    setLoading(true)
     const { data, error } = await supabase
       .from("vw_sepultamentos_v1")
       .select("*")
@@ -67,11 +102,17 @@ export default function SepultamentosPeriodo() {
           <strong>LOCAL:</strong> {s.quadra} - <strong>LOTE:</strong> {s.lote}
         </div>
         <div style={{ fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
+          <span>Nascimento: {formatarData(s.data_nascimento)}</span>
           <span>Falecimento: {formatarData(s.data_falecimento)}</span>
           <span>Idade: <strong>{s.idade} anos</strong></span>
         </div>
       </div>
     )
+  }
+
+    const handleGerarPDF = () => {
+    if (dados.length === 0) return alert("Não há dados para gerar o PDF")
+    gerarRelatorioSepultamentos(dados, formatarData(dataDe), formatarData(dataAte))
   }
 
   function formatarData(data) {
@@ -92,12 +133,15 @@ export default function SepultamentosPeriodo() {
         <button onClick={() => carregarDados(dataDe, dataAte)} style={{ padding: "8px 20px", backgroundColor: "#2c3e50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
           Filtrar
         </button>
+        <button onClick={handleGerarPDF} style={styles.btnPdf}>
+            Gerar PDF
+          </button>
       </div>
 
       <ContainerTabela>
         {isMobile ? (
           <div style={{ paddingBottom: "80px" }}>
-            {dados.map(s => <CartaoMobileBusca key={s.id} s={s} />)}
+            {dados.map(s => <CartaoMobilePeriodo key={s.id} s={s} />)}
           </div>
         ) : (
           
@@ -108,6 +152,7 @@ export default function SepultamentosPeriodo() {
                   <th>Quadra</th>
                   <th>Lote</th>
                   <th>Gaveta</th>
+                  <th>Nascimento</th>
                   <th>Falecimento</th>
                   <th>Idade</th>
                   <th>Funerária</th>
@@ -132,6 +177,7 @@ export default function SepultamentosPeriodo() {
                       <td>{s.quadra}</td>
                       <td>{s.lote}</td>
                       <td>{s.gaveta}</td>
+                      <td>{formatarData(s.data_nascimento)}</td>
                       <td>{formatarData(s.data_falecimento)}</td>
                       <td>{s.idade}</td>
                       <td>{s.funeraria}</td>

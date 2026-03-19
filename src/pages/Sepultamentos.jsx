@@ -112,44 +112,34 @@ export default function Sepultamentos() {
   return (
 
     <ContainerPagina>
-{isMobile ? (
+{/* HEADER ÚNICO E FLEXÍVEL */}
+    <div style={{
+      display: "flex",
+      flexDirection: isMobile ? "column" : "row",
+      alignItems: isMobile ? "stretch" : "center",
+      justifyContent: "space-between",
+      gap: isMobile ? "8px" : "15px",
+      marginBottom: "10px",
+      marginTop: "-15px" // Ajuste para reduzir margem superior se necessário
+    }}>
+      
+      <h2 style={{ margin: 0, whiteSpace: "nowrap" }}>Sepultamentos</h2>
 
-  // 📱 MOBILE (como já estava)
-  <>
-    <h2 style={{ marginBottom: 5 }}>Sepultamentos</h2>
+      {/* A busca ganha flex: 1 no desktop para ocupar o meio */}
+      <div style={{ flex: isMobile ? "none" : 1, margin: isMobile ? "0" : "0 20px" }}>
+        <SepultamentoSearchBar onBuscar={buscar} />
+      </div>
 
-    <Toolbar
-      onInserir={handleInserir}
-      onEditar={handleEditar}
-      onExcluir={handleExcluir}
-      itemSelecionado={selecionado}
-      mostrarFiltro={false}
-      fixa={true}
-    />
-  </>
-
-) : (
-  <div style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10
-  }}>
+      <Toolbar
+        onInserir={handleInserir}
+        onEditar={handleEditar}
+        onExcluir={handleExcluir}
+        itemSelecionado={selecionado}
+        mostrarFiltro={false}
+        fixa={isMobile} // Mantém fixa apenas no mobile
+      />
+    </div>
     
-    <h2 style={{ margin: 0 }}>Sepultamentos</h2>
-
-    <Toolbar
-      onInserir={handleInserir}
-      onEditar={handleEditar}
-      onExcluir={handleExcluir}
-      itemSelecionado={selecionado}
-      mostrarFiltro={false}
-      fixa={false} // importante aqui
-    />
-
-  </div>
-)}
-
      <ContainerTabela>
         {isMobile ? (
           <SepultamentoList

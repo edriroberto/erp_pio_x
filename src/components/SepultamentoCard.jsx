@@ -1,136 +1,128 @@
-const SepultamentoCard = ({ dado, selecionado, onClick }) => {
+import React, { useState, useEffect } from "react";
 
-  const estiloCard = {
-    background: "#fff",
-    borderRadius: "16px",
-    padding: "14px",
-    marginBottom: "12px",
-    cursor: "pointer",
+const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-    boxShadow: selecionado
-      ? "0 4px 14px rgba(52,152,219,0.25)"
-      : "0 1px 4px rgba(0,0,0,0.08)",
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-    border: selecionado
-      ? "2px solid #3498db"
-      : "2px solid transparent",
+  if (!dado) return null;
 
-    transition: "all .2s"
-  }
+  const pendencia = dado.obito_entregue === false;
+  
+  const exibirData = (valor) => {
+    if (!valor) return "—";
+    return formatarData ? formatarData(valor) : valor;
+  };
 
-    const linha = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    fontSize: 14
-    
-  }
-
-
-  const statusEntregue = dado.obito_entregue
-
-  return (
-
-    <div style={estiloCard} onClick={onClick}>
-
-      {/* NOME */}
-
-      <div style={{
-        fontSize: 16,
-        fontWeight: 600,
-        marginBottom: -5,
-        marginTop: -10
-      }}>
-        {dado.nome}
-      </div>
-
-      {/* NASCIMENTO / FALECIMENTO + IDADE */}
-
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: 12,
-        color: "#666",
-        marginBottom: 0,
-        marginTop: 5
-      }}>
-
-        <span>
-          ✦ {dado.nascimento}
-          {"  •  "}
-          ✝ {dado.falecimento}
-        </span>
-
-        <span style={{
-          fontSize: 11,
-          padding: "3px 8px",
-          borderRadius: 10,
-          background: "#eef3ff",
-          color: "#2b4c9b",
-          fontWeight: 600
-        }}>
-          {dado.idade} anos
-        </span>
-
-      </div>
-
-      {/* LOCAL */}
-      <div style={{
-        fontSize: 14,
-        fontWeight: 600,
-        marginBottom: 0
-      }}>
-        Local: {dado.quadra} • Lote {dado.lote}/{dado.gaveta}
-      </div>
-
-      
-      {/* FUNERÁRIA + STATUS */}
-
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: 13,
-        marginBottom: 0
-      }}>
-
-        <span>Funerária {dado.funeraria}</span>
-
-        {!statusEntregue && (
-  <span style={{
-    fontSize: 11,
-    padding: "3px 8px",
-    borderRadius: 10,
-    background: "#fdecea",
-    color: "#c0392b",
-    fontWeight: 600
-  }}>
-    Pendente
-  </span>
-)}
-
-      </div>
-
-      {/* OBS */}
-
-      {dado.observacoes && (
-
-        <div style={{
-          fontSize: 12,
-          color: "#888",
-          marginTop: 0,
-          marginBottom: -5
-        }}>
-          {dado.observacoes}
+  if (isMobile) {
+    return (
+      <div 
+        onClick={onClick}
+        style={{
+          background: '#fff',
+          borderRadius: '10px',
+          padding: '12px', // Reduzido de 16px para 12px
+          marginBottom: '12px',
+          cursor: 'pointer',
+          borderLeft: `5px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
+          backgroundColor: pendencia ? "#fff5f5" : "#fff",
+          boxShadow: selecionado 
+            ? '0 4px 12px rgba(52,152,219,0.2)' 
+            : '0 2px 4px rgba(0,0,0,0.05)',
+          transition: 'all 0.2s ease',
+          borderTop: '1px solid #eee',
+          borderRight: '1px solid #eee',
+          borderBottom: '1px solid #eee',
+        }}
+      >
+        {/* 1. CABEÇALHO (NOME E ID) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#08060d', flex: 1, lineHeight: '1.2' }}>
+            {pendencia && <span style={{ marginRight: 4 }}>⚠️</span>}
+            {dado.nome}
+          </div>
+          <span style={{ fontSize: '9px', color: '#aaa', marginLeft: '8px' }}>ID: {dado.id}</span>
         </div>
 
-      )}
+        {/* 2. LOCALIZAÇÃO (DESIGN MAIS COMPACTO) */}
+        <div style={{ 
+          fontSize: '11px', // Reduzido de 13px
+          color: '#444', 
+          background: pendencia ? 'rgba(229, 62, 62, 0.04)' : '#f3f4f6', 
+          padding: '6px 10px', 
+          borderRadius: '5px',
+          marginBottom: '8px',
+          display: 'flex',
+          justifyContent: 'space-between'
+        }}>
+          <span><strong>QUADRA:</strong> {dado.quadra}</span>
+          <span><strong>LOTE:</strong> {dado.lote}</span>
+          <span><strong>GAVETA:</strong> {dado.gaveta || "—"}</span>
+        </div>
 
-    </div>
+        {/* 3. DATAS E IDADE */}
+        <div style={{ 
+          fontSize: '11px', // Reduzido de 13px
+          display: 'flex', 
+          gap: '12px',
+          color: '#555',
+          marginBottom: '8px'
+        }}>
+          <span>Nasc: <strong>{exibirData(dado.nascimento)}</strong></span>
+          <span>Falec: <strong>{exibirData(dado.falecimento)}</strong></span>
+          <span style={{ marginLeft: 'auto', color: '#2b4c9b' }}><strong>{dado.idade} anos</strong></span>
+        </div>
 
-  )
+        {/* 4. FUNERÁRIA E OBS */}
+        <div style={{ 
+          fontSize: '11px', 
+          color: '#777', 
+          borderTop: '1px solid #f0f0f0', 
+          paddingTop: '6px'
+        }}>
+          <div style={{ marginBottom: dado.observacoes ? '4px' : '0' }}>
+            <strong>FUNERÁRIA:</strong> <span style={{ color: '#444' }}>{dado.funeraria || "—"}</span>
+          </div>
+          {dado.observacoes && (
+            <div style={{ 
+              fontSize: '10px', 
+              color: '#888', 
+              fontStyle: 'italic',
+              lineHeight: '1.3'
+            }}>
+              {dado.observacoes}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-}
+  // --- DESKTOP MANTÉM IGUAL ---
+  return (
+    <tr 
+      onClick={onClick}
+      style={{ 
+        cursor: 'pointer',
+        backgroundColor: selecionado ? "#ebf5ff" : (pendencia ? "#fff5f5" : "transparent"),
+        fontSize: '13px' // Fonte da tabela levemente menor também
+      }}
+    >
+      <td style={{ fontWeight: '600' }}>{pendencia && "⚠️ "}{dado.nome}</td>
+      <td style={{ textAlign: 'center' }}>{dado.quadra}</td>
+      <td style={{ textAlign: 'center' }}>{dado.lote}</td>
+      <td style={{ textAlign: 'center' }}>{dado.gaveta || "-"}</td>
+      <td>{exibirData(dado.nascimento)}</td>
+      <td>{exibirData(dado.falecimento)}</td>
+      <td style={{ textAlign: 'center' }}>{dado.idade}</td>
+      <td>{dado.funeraria}</td>
+      <td style={{ fontSize: '11px', color: '#888' }}>{dado.observacoes}</td>
+    </tr>
+  );
+};
 
-export default SepultamentoCard
+export default SepultamentoCard;
