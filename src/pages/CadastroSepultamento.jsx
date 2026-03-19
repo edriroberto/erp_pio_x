@@ -98,12 +98,23 @@ export default function CadastroSepultamento() {
     buscarGavetas()
   }, [form.lote_id])
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    const val = type === 'checkbox' ? checked : (name === "nome" || name === "observacoes" ? value.toUpperCase() : value)
-    setForm(prev => ({ ...prev, [name]: val }))
-  }
+const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    let val;
+    
+    if (type === 'checkbox') {
+      val = checked;
+    } else if (name === "nome") {
+      // Somente o NOME continua sendo forçado para MAIÚSCULAS
+      val = value.toUpperCase();
+    } else {
+      // Todos os outros campos (incluindo observações) aceitam o texto como digitado
+      val = value;
+    }
 
+    setForm(prev => ({ ...prev, [name]: val }));
+  };
   async function carregarSepultamento(id){
 
   const { data, error } = await supabase
