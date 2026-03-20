@@ -112,14 +112,20 @@ export default function Sepultamentos() {
         alignItems: isMobile ? "stretch" : "center",
         justifyContent: "space-between",
         gap: isMobile ? "8px" : "20px",
-        marginBottom: "15px",
+        marginBottom: "-5px",
         marginTop: "-10px"
       }}>
         <h2 style={{ margin: 0, fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
           Sepultamentos
         </h2>
 
-        <div style={{ flex: isMobile ? "none" : 1, maxWidth: isMobile ? "100%" : "500px" }}>
+        <div style={{ 
+          flex: isMobile ? "none" : 1, 
+          maxWidth: isMobile ? "100%" : "500px" ,
+          marginBottom: "-10px",
+          marginTop: "-5px"
+          
+          }}>
           <SepultamentoSearchBar onBuscar={buscar} />
         </div>
 

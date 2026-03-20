@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AlertCircle } from "lucide-react"; // Novo ícone
 
 const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -38,7 +39,14 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
           <div style={{ fontSize: '13px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
-            {pendencia && <span style={{ marginRight: 3 }}>⚠️</span>}
+            {pendencia && <span style={{ marginRight: 3 }}>
+              <AlertCircle 
+                          size={13} 
+                          color="#e53e3e" 
+                          strokeWidth={2}
+                        //  title="Óbito pendente" 
+                        />
+                        </span>}
             {dado.nome}
           </div>
           <span style={{ fontSize: '10px', color: '#ccc', marginLeft: '8px' }}>#{dado.id}</span>
@@ -92,10 +100,17 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
         borderBottom: '1px solid #eee'
       }}
     >                                 
-      <td style={{ padding: '8px 12px', fontWeight: '600', color: '#1e293b', width: '25%' }}>
-        {pendencia && <span style={{ marginRight: '5px' }}>⚠️</span>}
-        {dado.nome}
-      </td>
+      <td style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}>
+                      {pendenciaObito && (
+                        <AlertCircle 
+                          size={16} 
+                          color="#e53e3e" 
+                          strokeWidth={2.5}
+                          title="Óbito pendente" 
+                        />
+                      )}
+                      {dado.nome}
+                    </td>
       <td style={{ padding: '8px' }}>{dado.quadra}</td>
       <td style={{ padding: '8px', textAlign: 'center' }}>{dado.lote}</td>
       <td style={{ padding: '8px', textAlign: 'center' }}>{dado.gaveta || "-"}</td>

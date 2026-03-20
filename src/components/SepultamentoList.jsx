@@ -1,4 +1,5 @@
 import SepultamentoCard from "./SepultamentoCard"
+import { AlertCircle } from "lucide-react"; // Novo ícone
 
 export default function SepultamentoList({
   dados,

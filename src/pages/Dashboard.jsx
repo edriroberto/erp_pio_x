@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react"; // Novo ícone
 
 import {
   BarChart,
@@ -260,9 +261,16 @@ export default function Dashboard() {
                       className="linha-tabela"
                     >
                       <td style={{ fontWeight: '500' }}>
-                        {pendenciaObito && <span title="Óbito pendente" style={{ marginRight: 5 }}>⚠️</span>}
+                        {pendenciaObito && <span title="Óbito pendente" style={{ marginRight: 5 }}><AlertCircle 
+                                                  size={13} 
+                                                  color="#e53e3e" 
+                                                  strokeWidth={2}
+                                                //  title="Óbito pendente" 
+                                                />
+                                      </span>}
                         {s.nome}
                       </td>
+                      
                       <td>{s.quadra}</td>
                       <td style={{ textAlign: 'center' }}>{s.lote}</td>
                       <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
