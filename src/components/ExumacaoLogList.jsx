@@ -29,18 +29,30 @@ export default function ExumacaoLogList({ dados, selecionado, onSelecionar, form
 
   // Restaura o estilo de Badge (Etiqueta) para o destino
   const getBadgeStyle = (destino) => {
-    const isOssario = destino?.includes("Ossário");
-    return {
-      padding: "2px 10px",
-      borderRadius: "12px",
-      fontSize: "11px",
-      fontWeight: "700",
-      background: isOssario ? "#fbd38d" : "#b2f5ea", // Cores mais fortes para o badge contrastar com o fundo
-      color: isOssario ? "#744210" : "#234e52",
-      display: "inline-block",
-      textTransform: "uppercase"
-    };
+  const isOssario = destino?.includes("Ossário");
+  
+  // Cores Modernas 2026 (Pastéis com alto contraste de texto)
+  const theme = isOssario 
+    ? { bg: "#FEF3C7", text: "#92400E" } // Amber/Amarelo suave
+    : { bg: "#CCFBEF", text: "#134E4A" }; // Teal/Verde água suave
+
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "6px 16px",
+    borderRadius: "999px", // Garante o formato de pílula (Pill)
+    fontSize: "11px",
+    fontWeight: "700",
+    letterSpacing: "0.5px", // Toque moderno de design
+    background: theme.bg,
+    color: theme.text,
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+    border: `1px solid ${isOssario ? "#FDE68A" : "#99F6E4"}`, // Borda sutil para definir o shape
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
   };
+};
 
   return (
     <div style={{ padding: "10px 5px" }}>
@@ -62,9 +74,6 @@ export default function ExumacaoLogList({ dados, selecionado, onSelecionar, form
               <span style={{ fontWeight: "800", color: "#2d3748", fontSize: "12px", flex: 1, marginBottom: "5px" }}>
                 {item.nome_falecido}
               </span>
-              <span style={{ fontSize: "11px", fontWeight: "bold", color: "#718096", marginLeft: "10px" }}>
-                {formatarData(item.data_exumacao)}
-              </span>
             </div>
 
             <div style={{ 
@@ -74,19 +83,29 @@ export default function ExumacaoLogList({ dados, selecionado, onSelecionar, form
                 marginTop: "-10px"
                  }}>
               <div style={styles.infoRow}>
-                <span style={styles.label}>LOCAL ORIGINAL</span>
-                <span style={styles.valor}>{item.quadra_lote || "Não inf."}</span>
+                <span style={styles.valor}>Local Original: {item.quadra_lote || "Não inf."}</span>
               </div>
 
-              <div style={styles.infoRow}>
-                <span style={styles.label}>DESTINO</span>
-                <span style={getBadgeStyle(item.destino)}>
-                  {item.destino}
-                </span>
-              </div>
+              <div style={{
+                        display: "flex",          // Ativa o modo flexível
+                        justifyContent: "center", // Centraliza horizontalmente o conteúdo
+                        alignItems: "center",     // Garante alinhamento vertical se necessário
+                        width: "100%",            // Ocupa toda a largura do card
+                        marginTop: "2px",        // Espaçamento em relação ao dado anterior
+                        marginBottom: "2px"       // Espaçamento em relação à borda inferior do card
+                        }}>
+                        <span style={getBadgeStyle(item.destino)}>
+                            DESTINO: {item.destino}
+                        </span>
+                    </div>
+
                 <div style={styles.infoRow}>
-                    <span style={styles.label}>EXUMADOR</span>
-                    <span style={styles.valor}>{item.responsavel}</span>
+                    
+                    <span style={styles.valor}>Exumador: {item.responsavel}</span>
+              <span style={{ fontSize: "11px", fontWeight: "bold", color: "#718096", marginLeft: "10px" }}>
+                {formatarData(item.data_exumacao)}
+              </span>
+
                 </div>
 
             </div>
@@ -119,7 +138,7 @@ const styles = {
     padding: "8px",
     background: "rgba(255,255,255,0.4)",
     borderRadius: "6px",
-    fontSize: "10px",
+    fontSize: "11px",
     fontStyle: "italic",
     color: "#4a5568",
     borderLeft: "3px solid #cbd5e0"

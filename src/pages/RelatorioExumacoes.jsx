@@ -93,7 +93,8 @@ export default function RelatorioExumacoes() {
         justifyContent: "space-between",
         flexWrap: "wrap",
         gap: "15px",
-        marginBottom: "20px"
+        marginBottom: "-5px",
+        marginTop: "-5px"
       }}>
         <input
           type="text"
@@ -111,7 +112,13 @@ export default function RelatorioExumacoes() {
         />
         
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-           <span style={{ fontSize: 14, color: "#718096", fontWeight: 500 }}>
+           <span style={{ 
+            fontSize: 14, 
+            color: "#718096", 
+            fontWeight: 500 ,
+            marginTop: "-10px",
+            
+            }}>
             {dadosFiltrados.length} registros
           </span>
           {selecionado && (

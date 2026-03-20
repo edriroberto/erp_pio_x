@@ -67,7 +67,9 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
 
         <div style={{ fontSize: '10px', color: '#777', borderTop: '1px solid #f2f2f2', paddingTop: '2px', marginBottom:'3px' }}>
           <div style={{ lineHeight: '1.1' }}>
-            <strong>FUNERÁRIA:</strong> <span style={{ color: '#444' }}>{dado.funeraria || "—"}</span>
+            
+              <strong>Funerária {dado.funeraria || "—"}</strong> 
+            
           </div>
           {dado.observacoes && (
             <div style={{ fontSize: '9px', color: '#999', fontStyle: 'italic', lineHeight: '1.1', marginTop: '4px' }}>

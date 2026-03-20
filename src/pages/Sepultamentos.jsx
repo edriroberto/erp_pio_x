@@ -7,9 +7,8 @@ import SepultamentoList from "../components/SepultamentoList"
 import SepultamentoSearchBar from "../components/SepultamentoSearchBar"
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
+
 import "../styles/tabela.css"
-
-
 import "../styles/tabela.css"
 
 export default function Sepultamentos() {
