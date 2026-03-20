@@ -15,11 +15,14 @@ import {
 
 import DashboardCard from "../components/DashboardCard";
 import SepultamentoCard from "../components/SepultamentoCard";
+import ContainerTabela from "../components/ContainerTabela"; // Importado para manter o padrão
+import "../styles/tabela.css"; // Importado para usar os estilos de tabela
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [grafico, setGrafico] = useState([]);
   const [ultimos, setUltimos] = useState([]);
+  const [selecionado, setSelecionado] = useState(null); // Adicionado para controle de seleção
   const [totais, setTotais] = useState({
     sepultamentos: 0,
     falecimentos: 0,
@@ -35,18 +38,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     carregarDashboard();
-
     const resize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  // Navegar para cadastro
   function abrirCadastro(id) {
     navigate(`/cadastroSepultamento/${id}`);
   }
 
-  // Formata idade
   function calcularIdade(dataNascimento, dataFalecimento) {
     if (!dataNascimento || !dataFalecimento) return "";
     const nasc = new Date(dataNascimento);
@@ -57,17 +57,14 @@ export default function Dashboard() {
     return idade;
   }
 
-  // Formata data para DD/MM/AAAA
   function formatar(data) {
     if (!data) return "";
     const [ano, mes, dia] = data.split("-");
     return `${dia}/${mes}/${ano}`;
   }
 
-  // Normaliza mês/ano "YYYY-MM"
   const formatChave = (ano, mes) => `${ano}-${String(mes).padStart(2, "0")}`;
 
-  // Carrega todos os dados do dashboard
   async function carregarDashboard() {
     try {
       const [g, s, f, p, l] = await Promise.all([
@@ -82,7 +79,6 @@ export default function Dashboard() {
           .limit(15)
       ]);
 
-      // 12 meses consecutivos
       const meses12 = [];
       const hoje = new Date();
       for (let i = 11; i >= 0; i--) {
@@ -95,7 +91,6 @@ export default function Dashboard() {
         });
       }
 
-      // Preencher dados do banco
       if (g.data) {
         g.data.forEach(item => {
           const [ano, mes] = item.mes.split("-");
@@ -105,20 +100,17 @@ export default function Dashboard() {
         });
       }
 
-      // Adicionar cores
       const dadosComCor = meses12.map((m, idx) => ({
         ...m,
         cor: CORES[idx % CORES.length]
       }));
 
       setGrafico(dadosComCor);
-
       setTotais({
         sepultamentos: s.data?.total || 0,
         falecimentos: f.data?.total || 0,
         pendentes: p.data?.total || 0
       });
-
       setUltimos(l.data || []);
     } catch (e) {
       console.error("Erro dashboard:", e);
@@ -143,7 +135,7 @@ export default function Dashboard() {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3,1fr)",
-          gap: 10,
+          gap: 8,
           marginBottom: 16
         }}
       >
@@ -175,7 +167,7 @@ export default function Dashboard() {
             Sepultamentos últimos 12 meses
           </div>
 
-          <div style={{ height: 160 }}>
+          <div style={{ height: 140 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={grafico}
@@ -195,27 +187,101 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Lista de cards */}
+        {/* LISTA DE ÚLTIMOS SEPULTAMENTOS */}
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Últimos Sepultamentos</div>
 
-        {ultimos.map(s => (
-          <SepultamentoCard
-            key={s.id}
-            dado={{
-              nome: s.nome,
-              nascimento: formatar(s.data_nascimento),
-              falecimento: formatar(s.data_falecimento),
-              quadra: s.quadra,
-              lote: s.lote,
-              gaveta: s.gaveta,
-              funeraria: s.funeraria,
-              idade: calcularIdade(s.data_nascimento, s.data_falecimento),
-              obito_entregue: Boolean(s.obito_entregue),
-              observacoes: s.observacoes
-            }}
-            onClick={() => abrirCadastro(s.id)}
-          />
-        ))}
+        {isMobile ? (
+          // MOBILE: Usa a lista de cards (DIVs)
+          ultimos.map(s => (
+            <SepultamentoCard
+              key={s.id}
+              dado={{
+                id: s.id,
+                nome: s.nome,
+                nascimento: formatar(s.data_nascimento),
+                falecimento: formatar(s.data_falecimento),
+                quadra: s.quadra,
+                lote: s.lote,
+                gaveta: s.gaveta,
+                funeraria: s.funeraria,
+                idade: calcularIdade(s.data_nascimento, s.data_falecimento),
+                obito_entregue: Boolean(s.obito_entregue),
+                observacoes: s.observacoes
+              }}
+              selecionado={selecionado?.id === s.id}
+              onClick={() => {
+                setSelecionado(s);
+                abrirCadastro(s.id);
+              }}
+            />
+          ))
+        ) : (
+          // DESKTOP: Usa a técnica de tabela do sepultamentos.jsx
+          <ContainerTabela>
+            <table className="tabela">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Quadra</th>
+                  <th style={{ textAlign: 'center' }}>Lote</th>
+                  <th style={{ textAlign: 'center' }}>Gaveta</th>
+                  <th>Nascimento</th>
+                  <th>Falecimento</th>
+                  <th style={{ textAlign: 'center' }}>Idade</th>
+                  <th>Funerária</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ultimos.map((s) => {
+                  const selecionadoLinha = selecionado?.id === s.id;
+                  const pendenciaObito = s.obito_entregue === false;
+                  
+                  // Mesma lógica de cores de Sepultamentos.jsx
+                  let corFundo = "transparent";
+                  if (selecionadoLinha) {
+                    corFundo = "#ebf8ff";
+                  } else if (pendenciaObito) {
+                    corFundo = "#fff5f5";
+                  }
+
+                  return (
+                    <tr
+                      key={s.id}
+                      onClick={() => setSelecionado(s)}
+                      onDoubleClick={() => abrirCadastro(s.id)}
+                      style={{
+                        cursor: "pointer",
+                        backgroundColor: corFundo,
+                        color: selecionadoLinha ? "#2b6cb0" : (pendenciaObito ? "#c53030" : "inherit"),
+                        fontWeight: selecionadoLinha ? "600" : "400",
+                        transition: "background-color .2s"
+                      }}
+                      className="linha-tabela"
+                    >
+                      <td style={{ fontWeight: '500' }}>
+                        {pendenciaObito && <span title="Óbito pendente" style={{ marginRight: 5 }}>⚠️</span>}
+                        {s.nome}
+                      </td>
+                      <td>{s.quadra}</td>
+                      <td style={{ textAlign: 'center' }}>{s.lote}</td>
+                      <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
+                      <td>{formatar(s.data_nascimento)}</td>
+                      <td>{formatar(s.data_falecimento)}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {calcularIdade(s.data_nascimento, s.data_falecimento)}
+                      </td>
+                      <td>{s.funeraria}</td>
+                      <td style={{ fontSize: 11, color: pendenciaObito ? "#c53030" : "#666" }}>
+                        {s.observacoes}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </ContainerTabela>
+        )}
       </div>
     </div>
   );

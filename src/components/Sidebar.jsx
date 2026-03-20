@@ -53,6 +53,7 @@ export default function Sidebar() {
   
     { to: "/funerarias", label: "Funerárias"},
     { to: "/coveiros", label: "Coveiros"},
+    { to: "/exumacoes", label: "Exumações"},
   ];
 
   const sidebarStyle = {

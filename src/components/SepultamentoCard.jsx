@@ -24,76 +24,50 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
         onClick={onClick}
         style={{
           background: '#fff',
-          borderRadius: '10px',
-          padding: '12px', // Reduzido de 16px para 12px
-          marginBottom: '12px',
+          borderRadius: '8px',
+          padding: '6px 10px',
+          marginBottom: '0px', 
           cursor: 'pointer',
           borderLeft: `5px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
           backgroundColor: pendencia ? "#fff5f5" : "#fff",
-          boxShadow: selecionado 
-            ? '0 4px 12px rgba(52,152,219,0.2)' 
-            : '0 2px 4px rgba(0,0,0,0.05)',
-          transition: 'all 0.2s ease',
+          boxShadow: selecionado ? '0 2px 8px rgba(52,152,219,0.15)' : '0 1px 2px rgba(0,0,0,0.05)',
           borderTop: '1px solid #eee',
           borderRight: '1px solid #eee',
           borderBottom: '1px solid #eee',
         }}
       >
-        {/* 1. CABEÇALHO (NOME E ID) */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#08060d', flex: 1, lineHeight: '1.2' }}>
-            {pendencia && <span style={{ marginRight: 4 }}>⚠️</span>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+          <div style={{ fontSize: '14px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
+            {pendencia && <span style={{ marginRight: 3 }}>⚠️</span>}
             {dado.nome}
           </div>
-          <span style={{ fontSize: '9px', color: '#aaa', marginLeft: '8px' }}>ID: {dado.id}</span>
+          <span style={{ fontSize: '10px', color: '#ccc', marginLeft: '8px' }}>#{dado.id}</span>
         </div>
 
-        {/* 2. LOCALIZAÇÃO (DESIGN MAIS COMPACTO) */}
         <div style={{ 
-          fontSize: '11px', // Reduzido de 13px
-          color: '#444', 
+          fontSize: '11px', color: '#444', 
           background: pendencia ? 'rgba(229, 62, 62, 0.04)' : '#f3f4f6', 
-          padding: '6px 10px', 
-          borderRadius: '5px',
-          marginBottom: '8px',
-          display: 'flex',
-          justifyContent: 'space-between'
+          padding: '1px 4px', borderRadius: '4px',
+          marginBottom: '-3px', marginTop: '-5px',
+          display: 'flex', justifyContent: 'space-between'
         }}>
-          <span><strong>QUADRA:</strong> {dado.quadra}</span>
-          <span><strong>LOTE:</strong> {dado.lote}</span>
-          <span><strong>GAVETA:</strong> {dado.gaveta || "—"}</span>
+          <span><strong>Local:</strong> {dado.quadra}</span>
+          <span><strong>Lote:</strong> {dado.lote}</span>
+          <span><strong>Gav.:</strong> {dado.gaveta || "—"}</span>
         </div>
 
-        {/* 3. DATAS E IDADE */}
-        <div style={{ 
-          fontSize: '11px', // Reduzido de 13px
-          display: 'flex', 
-          gap: '12px',
-          color: '#555',
-          marginBottom: '8px'
-        }}>
+        <div style={{ fontSize: '11px', display: 'flex', gap: '10px', color: '#555', marginBottom: '0px' }}>
           <span>Nasc: <strong>{exibirData(dado.nascimento)}</strong></span>
           <span>Falec: <strong>{exibirData(dado.falecimento)}</strong></span>
           <span style={{ marginLeft: 'auto', color: '#2b4c9b' }}><strong>{dado.idade} anos</strong></span>
         </div>
 
-        {/* 4. FUNERÁRIA E OBS */}
-        <div style={{ 
-          fontSize: '11px', 
-          color: '#777', 
-          borderTop: '1px solid #f0f0f0', 
-          paddingTop: '6px'
-        }}>
-          <div style={{ marginBottom: dado.observacoes ? '4px' : '0' }}>
+        <div style={{ fontSize: '10px', color: '#777', borderTop: '1px solid #f2f2f2', paddingTop: '2px', marginBottom:'3px' }}>
+          <div style={{ lineHeight: '1.1' }}>
             <strong>FUNERÁRIA:</strong> <span style={{ color: '#444' }}>{dado.funeraria || "—"}</span>
           </div>
           {dado.observacoes && (
-            <div style={{ 
-              fontSize: '10px', 
-              color: '#888', 
-              fontStyle: 'italic',
-              lineHeight: '1.3'
-            }}>
+            <div style={{ fontSize: '9px', color: '#999', fontStyle: 'italic', lineHeight: '1.1', marginTop: '4px' }}>
               {dado.observacoes}
             </div>
           )}
@@ -102,25 +76,39 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
     );
   }
 
-  // --- DESKTOP MANTÉM IGUAL ---
+  // --- DESKTOP (TABELA ALINHADA) ---
   return (
     <tr 
       onClick={onClick}
       style={{ 
         cursor: 'pointer',
         backgroundColor: selecionado ? "#ebf5ff" : (pendencia ? "#fff5f5" : "transparent"),
-        fontSize: '13px' // Fonte da tabela levemente menor também
+        fontSize: '13px',
+        borderBottom: '1px solid #eee'
       }}
-    >
-      <td style={{ fontWeight: '600' }}>{pendencia && "⚠️ "}{dado.nome}</td>
-      <td style={{ textAlign: 'center' }}>{dado.quadra}</td>
-      <td style={{ textAlign: 'center' }}>{dado.lote}</td>
-      <td style={{ textAlign: 'center' }}>{dado.gaveta || "-"}</td>
-      <td>{exibirData(dado.nascimento)}</td>
-      <td>{exibirData(dado.falecimento)}</td>
-      <td style={{ textAlign: 'center' }}>{dado.idade}</td>
-      <td>{dado.funeraria}</td>
-      <td style={{ fontSize: '11px', color: '#888' }}>{dado.observacoes}</td>
+    >                                 
+      <td style={{ padding: '8px 12px', fontWeight: '600', color: '#1e293b', width: '25%' }}>
+        {pendencia && <span style={{ marginRight: '5px' }}>⚠️</span>}
+        {dado.nome}
+      </td>
+      <td style={{ padding: '8px' }}>{dado.quadra}</td>
+      <td style={{ padding: '8px', textAlign: 'center' }}>{dado.lote}</td>
+      <td style={{ padding: '8px', textAlign: 'center' }}>{dado.gaveta || "-"}</td>
+      <td style={{ padding: '8px' }}>{exibirData(dado.nascimento)}</td>
+      <td style={{ padding: '8px' }}>{exibirData(dado.falecimento)}</td>
+      <td style={{ padding: '8px', textAlign: 'center' }}>{dado.idade}</td>
+      <td style={{ padding: '8px' }}>{dado.funeraria}</td>
+      <td style={{ 
+        padding: '8px 12px',
+        fontSize: '12px', 
+        color: pendencia ? "#c53030" : "#666",
+        maxWidth: '200px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }}>
+        {dado.observacoes}
+      </td>
     </tr>
   );
 };
