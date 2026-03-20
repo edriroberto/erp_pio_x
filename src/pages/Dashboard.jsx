@@ -129,7 +129,10 @@ export default function Dashboard() {
         fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
       }}
     >
-      <h2 style={{ marginBottom: 16 }}>Dashboard</h2>
+      <h2 style={{ marginBottom: 16, fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
+          Dashboard
+        </h2>
+      
 
       {/* KPIs */}
       <div
