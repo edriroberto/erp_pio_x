@@ -1,46 +1,39 @@
-import { useState } from "react"
+import { useState } from "react";
+import { Search, X } from "lucide-react";
 
 export default function SepultamentoSearchBar({ onBuscar }) {
-
-  const [texto, setTexto] = useState("")
+  const [texto, setTexto] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   function handleChange(e) {
-
-    const valor = e.target.value.toUpperCase()
-
-    setTexto(valor)
-
+    const valor = e.target.value.toUpperCase();
+    setTexto(valor);
     if (onBuscar) {
-      onBuscar(valor)
+      onBuscar(valor);
     }
   }
 
   function limpar() {
-    setTexto("")
-    if (onBuscar) onBuscar("")
+    setTexto("");
+    if (onBuscar) onBuscar("");
   }
 
   return (
-
-    <div style={{
-      marginBottom: 7,
-      marginTop: 5,
-      background: "#fff",
-      border: "1px solid #e2e8f0",
-      borderRadius: 8,
-      padding: "8px 12px",
-      display: "flex",
-      alignItems: "center",
-      gap: 8
-    }}>
-
-      {/* LUPA */}
-      <span style={{
-        fontSize: 16,
-        opacity: 0.6
-      }}>
-        🔍
-      </span>
+    <div 
+      style={{
+        ...styles.container,
+        borderColor: isFocused ? "#3b82f6" : "#e2e8f0", // Borda azul ao focar
+        boxShadow: isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+      }}
+    >
+      {/* LUPA (ÍCONE MODERNO) */}
+      <Search 
+        size={18} 
+        style={{ 
+          color: isFocused ? "#3b82f6" : "#94a3b8",
+          transition: "color 0.2s" 
+        }} 
+      />
 
       {/* INPUT */}
       <input
@@ -48,35 +41,59 @@ export default function SepultamentoSearchBar({ onBuscar }) {
         placeholder="BUSCAR NOME / QUADRA / LOTE / FUNERÁRIA"
         value={texto}
         onChange={handleChange}
-        style={{
-          flex: 1,
-          border: "none",
-          outline: "none",
-          fontSize: 14,
-          background: "transparent",
-          textTransform: "uppercase",
-          color: "#000", // 🔥 define a cor do texto
-          
-        }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        style={styles.input}
       />
 
-      {/* BOTÃO LIMPAR */}
+      {/* BOTÃO LIMPAR (ÍCONE MODERNO) */}
       {texto && (
         <button
           onClick={limpar}
-          style={{
-            border: "none",
-            background: "transparent",
-            cursor: "pointer",
-            fontSize: 16,
-            opacity: 0.6
-          }}
+          style={styles.btnClear}
+          title="Limpar busca"
         >
-          ❌
+          <X size={18} strokeWidth={2.5} />
         </button>
       )}
-
     </div>
-
-  )
+  );
 }
+
+const styles = {
+  container: {
+    marginBottom: "10px",
+    marginTop: "5px",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    borderRadius: "10px", // Bordas um pouco mais arredondadas (Padrão 2026)
+    padding: "10px 14px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    transition: "all 0.2s ease-in-out",
+  },
+  input: {
+    flex: 1,
+    border: "none",
+    outline: "none",
+    fontSize: "14px",
+    fontWeight: "500", // Texto levemente mais encorpado
+    background: "transparent",
+    textTransform: "uppercase",
+    color: "#1e293b", // Slate 800 para melhor leitura
+    letterSpacing: "0.3px",
+  },
+  btnClear: {
+    border: "none",
+    background: "#f1f5f9", // Fundo cinza sutil no botão de fechar
+    color: "#64748b",
+    cursor: "pointer",
+    padding: "4px",
+    borderRadius: "50%", // Botão circular
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "background 0.2s",
+  }
+};
