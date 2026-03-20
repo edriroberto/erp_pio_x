@@ -41,7 +41,7 @@ export default function Sidebar() {
     { to: "/funerarias", label: "Funerárias", icon: "🏢" },
     { to: "/coveiros", label: "Coveiros", icon: "🧑‍🌾" },
     { to: "/exumacoes", label: "Exumações", icon: "🦴" },
-    { to: "/relatorioexumacoes", label: "Relatório de Exumações", icon: "🦴" },
+    { to: "/relatorioexumacoes", label: "Relatório de Exumações", icon: "📋" }
   ];
 
   // --- ESTILOS DESKTOP ---
