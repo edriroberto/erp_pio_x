@@ -17,9 +17,7 @@ import Lotes from "./pages/Lotes";
 import Funerarias from "./pages/Funerarias";
 import CadastroSepultamento from "./pages/CadastroSepultamento";
 import Exumacoes from "./pages/PainelExumacao";
-
-import MapaVisual from "./pages/MapaVisual";
-import MapaEditor from "./pages/MapaEditor";
+import RelatorioExumacoes from "./pages/RelatorioExumacoes";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -62,7 +60,8 @@ export default function App() {
                 <Route path="/lotes" element={<Lotes />}/>
                 <Route path="/cadastrar-sepultamento" element={<CadastroSepultamento />}/>
                 <Route path="/cadastroSepultamento/:id" element={<CadastroSepultamento />}/>
-                <Route path="/exumacoes" element={<Exumacoes />}/>                
+                <Route path="/exumacoes" element={<Exumacoes />}/>
+                <Route path="/relatorioexumacoes" element={<RelatorioExumacoes />}/>                
                 <Route path="/lotes" element={<Lotes />}/>
 
                 

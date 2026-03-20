@@ -26,7 +26,7 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
           background: '#fff',
           borderRadius: '8px',
           padding: '6px 10px',
-          marginBottom: '0px', 
+          marginBottom: '7px', 
           cursor: 'pointer',
           borderLeft: `5px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
           backgroundColor: pendencia ? "#fff5f5" : "#fff",
@@ -37,7 +37,7 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
             {pendencia && <span style={{ marginRight: 3 }}>⚠️</span>}
             {dado.nome}
           </div>
@@ -49,7 +49,10 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
           background: pendencia ? 'rgba(229, 62, 62, 0.04)' : '#f3f4f6', 
           padding: '1px 4px', borderRadius: '4px',
           marginBottom: '-3px', marginTop: '-5px',
-          display: 'flex', justifyContent: 'space-between'
+          display: 'flex', justifyContent: 'space-between',
+          gap: "10px",
+          marginLeft: -5,
+          
         }}>
           <span><strong>Local:</strong> {dado.quadra}</span>
           <span><strong>Lote:</strong> {dado.lote}</span>

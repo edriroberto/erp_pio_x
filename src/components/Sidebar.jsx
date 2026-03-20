@@ -32,30 +32,19 @@ export default function Sidebar() {
     navigate("/login");
   };
 
-  {/*
   const navLinks = [
     { to: "/", label: "Início", icon: "🏠" },
     { to: "/sepultamentos", label: "Sepultamentos", icon: "⚰️" },
     { to: "/sepultamentos-nome", label: "Por nome", icon: "🔍" },
     { to: "/sepultamentos-periodo", label: "Por período", icon: "📅" },
-    { to: "/quadras", label: "Quadras e Lotes", icon: "🗺️" },
+    { to: "/quadras", label: "Quadras", icon: "🗺️" },
     { to: "/funerarias", label: "Funerárias", icon: "🏢" },
     { to: "/coveiros", label: "Coveiros", icon: "🧑‍🌾" },
-  ];
-*/}
-  const navLinks = [
-    { to: "/", label: "Início"},
-    { to: "/sepultamentos", label: "Sepultamentos"},
-    
-    { to: "/sepultamentos-nome", label: "Por nome"},
-    { to: "/sepultamentos-periodo", label: "Por período"},
-    { to: "/quadras", label: "Quadras e Lotes"},    
-  
-    { to: "/funerarias", label: "Funerárias"},
-    { to: "/coveiros", label: "Coveiros"},
-    { to: "/exumacoes", label: "Exumações"},
+    { to: "/exumacoes", label: "Exumações", icon: "🦴" },
+    { to: "/relatorioexumacoes", label: "Relatório de Exumações", icon: "🦴" },
   ];
 
+  // --- ESTILOS DESKTOP ---
   const sidebarStyle = {
     width: 260,
     minWidth: 260,
@@ -65,70 +54,114 @@ export default function Sidebar() {
     padding: 20,
     background: "#2f3542",
     color: "#fff",
-    boxSizing: "border-box", // ADICIONE ISSO: impede que o padding "estique" a sidebar
-  };
-
-  const navStyle = {
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    gap: 5,
-    overflowY: "auto",
+    boxSizing: "border-box",
   };
 
   const itemStyle = (isActive) => ({
     display: "flex",
     alignItems: "center",
-    gap: 10,
-    padding: "10px 15px",
-    borderRadius: 4,
+    gap: 12,
+    padding: "12px 15px",
+    borderRadius: 8,
     textDecoration: "none",
     color: "#fff",
     background: isActive ? "#57606f" : "transparent",
+    transition: "background 0.2s",
   });
 
-  const userStyle = {
-    marginBottom: 20,
-    fontSize: 14,
-    fontWeight: 500,
-    color: "#f1f2f6",
-  };
-
-  const logoutStyle = {
-    padding: 10,
-    background: "#ea4335",
+  const logoutStyleDesktop = {
+    padding: "12px",
+    background: "#ea4335", // Fundo vermelho sólido original
     color: "#fff",
     border: "none",
-    borderRadius: 4,
+    borderRadius: "8px",
     cursor: "pointer",
     width: "100%",
-    marginTop: "auto", // garante que fique fixo na parte inferior
+    marginTop: "auto",
+    fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
   };
 
+  // --- RENDERIZAÇÃO MOBILE ---
   if (isMobile) {
-  return (
-    <nav className="nav-mobile-bottom" style={{ display: "flex", justifyContent: "space-around" }}>
-      {/* Filtramos para incluir apenas os índices 1, 2 e 5 */}
-      {navLinks
-        .filter((_, index) => [0, 1, 4].includes(index))
-        .map((link) => (
-          <NavLink key={link.to} to={link.to} className="mobile-link">
-            {link.icon} <span>{link.label}</span>
-          </NavLink>
-        ))}     
-      
-     <button onClick={handleLogout} className="mobile-link" style={{ color: "red" }}>
-        🚪 <span>Sair</span>
-      </button>
-    </nav>
-  );
-}
+    return (
+      <nav 
+        style={{ 
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "65px",
+          background: "#1e222d",
+          display: "flex", 
+          justifyContent: "space-around",
+          alignItems: "center",
+          padding: "0 10px",
+          borderTop: "1px solid #3d4455",
+          zIndex: 1000,
+          boxShadow: "0 -2px 10px rgba(0,0,0,0.2)"
+        }}
+      >
+        {navLinks
+          .filter((_, index) => [0, 1, 4, 8].includes(index))
+          .map((link) => (
+            <NavLink 
+              key={link.to} 
+              to={link.to} 
+              style={({ isActive }) => ({
+                display: "flex", 
+                flexDirection: "column", 
+                alignItems: "center",
+                textDecoration: "none",
+                color: isActive ? "#54a0ff" : "#a4b0be",
+                fontSize: "10px",
+                gap: "4px"
+              })}
+            >
+              <span style={{ fontSize: "20px" }}>{link.icon}</span>
+              <span>{link.label}</span>
+            </NavLink>
+          ))}     
+        
+        <button 
+          onClick={handleLogout} 
+          style={{ 
+            background: "none", 
+            border: "none", 
+            display: "flex", 
+            flexDirection: "column", 
+            alignItems: "center",
+            color: "#ff7675",
+            gap: "4px"
+          }}
+        >
+          <span style={{ fontSize: "20px" }}>🚪</span>
+          <span style={{ fontSize: "10px" }}>Sair</span>
+        </button>
+      </nav>
+    );
+  }
 
+  // --- RENDERIZAÇÃO DESKTOP ---
   return (
     <aside style={sidebarStyle}>
-      <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 30 }}>ERP Cemitério</div>
-      {user ? <div style={userStyle}>👤 {user.email}</div> : <div style={userStyle}>🔒 Não logado</div>}
-      <nav style={navStyle}>
+      <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 30, color: "#fff" }}>
+        ERP Cemitério
+      </div>
+      
+      {user ? (
+        <div style={{ marginBottom: 20, fontSize: 13, color: "#f1f2f6", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 8, height: 8, background: "#55efc4", borderRadius: "50%" }}></div>
+          {user.email.split('@')[0]}
+        </div>
+      ) : (
+        <div style={{ marginBottom: 20, color: "#ced4da" }}>🔒 Não logado</div>
+      )}
+
+      <nav style={{ display: "flex", flexDirection: "column", gap: 5, flexGrow: 1, overflowY: "auto" }}>
         {navLinks.map((link) => (
           <NavLink key={link.to} to={link.to} style={({ isActive }) => itemStyle(isActive)}>
             <span>{link.icon}</span>
@@ -136,8 +169,10 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <button onClick={handleLogout} style={logoutStyle}>
-        Sair
+
+      <button onClick={handleLogout} style={logoutStyleDesktop}>
+        
+        Sair da conta
       </button>
     </aside>
   );
