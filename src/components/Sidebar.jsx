@@ -64,7 +64,7 @@ export default function Sidebar() {
     return (
       <nav style={styles.mobileNav}>
         {navLinks
-          .filter((_, index) => [0, 1, 4, 8].includes(index))
+          .filter((_, index) => [0, 1, 4, 7, 8].includes(index))
           .map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.to;
@@ -96,14 +96,14 @@ export default function Sidebar() {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.logo}>
-        <div style={styles.logoIcon}>G</div>
-        <span>ERP CEMITÉRIO</span>
+        <div style={styles.logoIcon}>P</div>
+        <span>ERP Cemitério</span>
       </div>
       
       {user ? (
         <div style={styles.userInfo}>
           <User size={16} color="#55efc4" />
-          <span>{user.email.split('@')[0].toUpperCase()}</span>
+          <span>{user?.email?.split('@')[0].toLowerCase()}</span>
         </div>
       ) : (
         <div style={styles.userInfo}>🔒 ACESSO RESTRITO</div>

@@ -18,6 +18,7 @@ import DashboardCard from "../components/DashboardCard";
 import SepultamentoCard from "../components/SepultamentoCard";
 import ContainerTabela from "../components/ContainerTabela"; // Importado para manter o padrão
 import "../styles/tabela.css"; // Importado para usar os estilos de tabela
+import ContainerPagina from "../components/ContainerPagina";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -129,7 +130,12 @@ export default function Dashboard() {
         fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
       }}
     >
-      <h2 style={{ marginBottom: 16, fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
+      <h2 style={{ 
+        marginBottom: "16px", 
+        fontSize: isMobile ? "20px" : "24px", 
+        color: "#1a202c" ,
+        marginTop: "-20px"
+        }}>
           Dashboard
         </h2>
       
@@ -147,7 +153,7 @@ export default function Dashboard() {
         <DashboardCard titulo="Falecimentos" valor={totais.falecimentos} cor="#34a853" />
         <DashboardCard titulo="Pendentes" valor={totais.pendentes} cor="#ea4335" />
       </div>
-
+              
       {/* Container rolagem */}
       <div
         style={{
@@ -171,7 +177,7 @@ export default function Dashboard() {
             Sepultamentos últimos 12 meses
           </div>
 
-          <div style={{ height: 140 }}>
+          <div style={{ height: isMobile ? 140 : 250 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={grafico}
@@ -189,7 +195,7 @@ export default function Dashboard() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        
 
         {/* LISTA DE ÚLTIMOS SEPULTAMENTOS */}
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Últimos Sepultamentos</div>
@@ -222,6 +228,7 @@ export default function Dashboard() {
         ) : (
           // DESKTOP: Usa a técnica de tabela do sepultamentos.jsx
           <ContainerTabela>
+            
             <table className="tabela">
               <thead>
                 <tr>
@@ -293,7 +300,12 @@ export default function Dashboard() {
             </table>
           </ContainerTabela>
         )}
+        
+        </div>
+        
       </div>
+    
+    
     </div>
   );
 }
