@@ -6,12 +6,15 @@ import ExumacaoCard from "../components/ExumacaoCard";
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
 
+const isMobile = window.innerWidth <= 768;
+
 export default function PainelExumacao() {
   // --- ESTADOS ---
   const [lista, setLista] = useState([]);
   const [quadras, setQuadras] = useState([]);
   const [lotes, setLotes] = useState([]);
   const [loading, setLoading] = useState(true);
+
 
   // Filtros
   const [filtroQuadra, setFiltroQuadra] = useState("");
@@ -176,6 +179,7 @@ export default function PainelExumacao() {
       </div>
 
       {/* FILTROS */}
+      
       <div style={styles.filtrosRow}>
         <select 
           value={filtroQuadra} 
@@ -329,8 +333,9 @@ const styles = {
   },
   filtrosRow: {
     display: 'flex',
-    gap: '10px',
-    marginBottom: '20px',
+    gap: "10px",
+    marginBottom: "2px",
+    marginTop: "-20px",
     flexWrap: 'wrap'
   },
   select: {
@@ -343,12 +348,15 @@ const styles = {
     fontSize: '14px',
     background: "#fff"
   },
-  gridCards: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-    gap: "15px",
-    padding: "5px"
-  },
+
+gridCards: {
+  display: "grid",
+  gridTemplateColumns: isMobile
+    ? "1fr"
+    : "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: "12px",
+  padding: "4px"
+},
   textoCentro: {
     textAlign: "center",
     padding: "20px",

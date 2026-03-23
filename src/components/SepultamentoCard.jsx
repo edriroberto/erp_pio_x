@@ -29,7 +29,7 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
           padding: '6px 10px',
           marginBottom: '7px', 
           cursor: 'pointer',
-          borderLeft: `5px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
+          borderLeft: `3px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
           backgroundColor: pendencia ? "#fff5f5" : "#fff",
           boxShadow: selecionado ? '0 2px 8px rgba(52,152,219,0.15)' : '0 1px 2px rgba(0,0,0,0.05)',
           borderTop: '1px solid #eee',
@@ -38,10 +38,10 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
             {pendencia && <span style={{ marginRight: 3 }}>
               <AlertCircle 
-                          size={13} 
+                          size={11} 
                           color="#e53e3e" 
                           strokeWidth={2}
                         //  title="Óbito pendente" 

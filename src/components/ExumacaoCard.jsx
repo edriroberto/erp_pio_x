@@ -1,43 +1,114 @@
-const ExumacaoCard = ({ dado, onConfirmar, formatarData }) => {
-  const corBorda = {
-    'VERMELHO': '#e53e3e', // Vermelho (Urgente)
-    'AMARELO': '#ecc94b',  // Amarelo (Atenção)
-    'VERDE': '#48bb78'     // Verde (No prazo)
-  }[dado.alerta_cor] || '#cbd5e0';
+import { MapPin } from "lucide-react";
 
-  const jaPodeExumar = dado.alerta_cor === 'VERMELHO';
+const ExumacaoCard = ({ dado, onConfirmar, formatarData }) => {
+
+  const statusConfig = {
+    VERMELHO: {
+      cor: "#e53e3e",
+      texto: "PRONTO PARA EXUMAR"
+    },
+    AMARELO: {
+      cor: "#d69e2e",
+      texto: "AVISO: 2 ANOS"
+    },
+    VERDE: {
+      cor: "#38a169",
+      texto: "DENTRO DO PRAZO"
+    }
+  };
+
+  const config = statusConfig[dado.alerta_cor] || {
+    cor: "#cbd5e0",
+    texto: "N/A"
+  };
+
+  const jaPodeExumar = dado.alerta_cor === "VERMELHO";
 
   return (
     <div style={{
-      background: '#fff',
-      borderLeft: `8px solid ${corBorda}`,
-      padding: '12px',
-      marginBottom: '10px',
-      borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+      background: "#fff",
+      borderRadius: 10,
+
+      padding: "8px 10px",
+      marginBottom: "8px",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+      borderLeft: `3px solid ${config.cor}`, // 👈 destaque aqui
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <strong style={{ fontSize: '14px' }}>{dado.nome}</strong>
-        <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#718096' }}>{dado.tipo_lote}</span>
+
+      {/* TÍTULO */}
+      <div style={{
+        fontSize: 13,
+        fontWeight: 600,
+        color: "#1a202c",
+        marginBottom: "2px",
+        lineHeight: 1.2
+      }}>
+        {dado.nome}
       </div>
 
-      <div style={{ fontSize: '12px', color: '#4a5568', margin: '5px 0' }}>
-        {dado.quadra} • Lote {dado.lote} {dado.gaveta ? `• GAVETA ${dado.gaveta}` : ''}
+      {/* SUBINFO */}
+      <div style={{
+        fontSize: 11,
+        color: "#666",
+        marginBottom: "4px"
+      }}>
+        {dado.tipo_lote}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '11px' }}>
-        <span>Sepultado: <strong>{formatarData(dado.data_sepultamento)}</strong></span>
-        <span style={{ color: corBorda, fontWeight: 'bold' }}>
-          {jaPodeExumar ? "PRONTO PARA EXUMAR" : dado.alerta_cor === 'AMARELO' ? "AVISO: 2.5 ANOS" : "DENTRO DO PRAZO"}
+      {/* LOCAL */}
+      <div style={{
+        fontSize: 11,
+        color: "#444",
+        display: "flex",
+        alignItems: "center",
+        gap: "5px",
+        marginBottom: "5px"
+      }}>
+        <MapPin size={10} />
+        <span>
+          {dado.quadra} • Lote {dado.lote}
+          {dado.gaveta && ` • Gav. ${dado.gaveta}`}
         </span>
       </div>
 
+      {/* DATA + STATUS */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 11,
+        alignItems: "center"
+      }}>
+        <span style={{ color: "#555" }}>
+          Sep: <strong>{formatarData(dado.data_sepultamento)}</strong>
+        </span>
+
+        <span style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: config.cor
+        }}>
+          {config.texto}
+        </span>
+      </div>
+
+      {/* BOTÃO */}
       {jaPodeExumar && (
-        <button 
+        <button
           onClick={() => onConfirmar(dado)}
-          style={{ width: '100%', marginTop: '10px', padding: '8px', background: '#2d3748', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{
+            width: "100%",
+            marginTop: "6px",
+            padding: "6px",
+            background: "#1a202c",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: "pointer"
+          }}
         >
-          CONFIRMAR EXUMAÇÃO
+          CONFIRMAR
         </button>
       )}
     </div>

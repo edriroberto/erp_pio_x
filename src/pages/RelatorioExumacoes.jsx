@@ -131,10 +131,26 @@ export default function RelatorioExumacoes() {
             {dadosFiltrados.length} registros
           </span>
 
-          <button onClick={handleGerarPDF} style={styles.btnPdf}>
-            <FileText size={16} />
-            PDF
-          </button>
+          <button onClick={handleGerarPDF} style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: isMobile ? "6px 12px" : "10px 18px",
+              background: "linear-gradient(135deg, #ef4444, #dc2626)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: isMobile ? "12px" : "14px",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+            >
+              📄 PDF
+            </button>
 
           {selecionado && (
             <button
@@ -257,7 +273,7 @@ const styles = {
     display: "flex",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: "12px",
+    gap: "8px",
     marginBottom: "-8px",
     marginTop: "-5px"
   },
@@ -265,6 +281,7 @@ const styles = {
   searchBox: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: "8px",
     background: "#fff",
     border: "1px solid #e2e8f0",
