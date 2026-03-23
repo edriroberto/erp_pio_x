@@ -98,7 +98,7 @@ export default function CadastroSepultamento() {
     buscarGavetas()
   }, [form.lote_id])
 
-const handleChange = (e) => {
+    const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
     let val;
