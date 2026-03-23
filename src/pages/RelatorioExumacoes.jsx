@@ -4,6 +4,7 @@ import { supabase } from "../utils/supabaseClient";
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
 import ExumacaoLogList from "../components/ExumacaoLogList";
+import SepultamentoSearchBar from "../components/SepultamentoSearchBar";
 
 import { gerarRelatorioExumacoes } from "../utils/relatorioPDF";
 
@@ -17,7 +18,7 @@ export default function RelatorioExumacoes() {
   const [selecionado, setSelecionado] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
+  
   // ==============================
   // RESPONSIVO
   // ==============================
@@ -110,9 +111,9 @@ export default function RelatorioExumacoes() {
   // RENDER
   // ==============================
   return (
-    <ContainerPagina titulo="Histórico de Exumações">
+<ContainerPagina>
 <div style={{
-        display: "flex",
+        //display: "flex",
         margin: '0 -18px',
         flexDirection: isMobile ? "column" : "row",
         alignItems: isMobile ? "stretch" : "center",
@@ -121,19 +122,38 @@ export default function RelatorioExumacoes() {
         marginBottom: "5px",
         marginTop: "-5px"
       }}>
-      {/* HEADER */}
-      <div style={styles.header}>
+
+{/* HEADER DE BUSCA */}
+      <div style={{
+        borderRadius: '6px',
+        border: '1px solid #cbd5e0',
+        fontSize: '1rem',
+        background: '#ffffff',
+        color: '#2d3748',
+        appearance: "none",
+        WebkitAppearance: "none",
+
+        justifyContent: "space-between",
         
-        <div style={styles.searchBox}>
-          <Search size={16} />
-          <input
-            type="text"
-            placeholder="Buscar por nome, local ou destino..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            style={styles.input}
-          />
+        padding: '10px',
+    
+        display: "flex",
+        flexWrap: 'wrap',
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "stretch" : "center",
+        gap: "1px",
+        marginBottom: "5px",
+        marginTop: "-10px"
+      }}>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Search size={24} color="#4fd1c5" />
+          <h2 style={{ margin: 0, fontSize: "20px" }}>Histórico de Exumações</h2>
         </div>
+
+        <div style={{ flex: 1, maxWidth: isMobile ? "100%" : "450px" }}>
+          <SepultamentoSearchBar onBuscar={setBusca} />
+        </div>    
 
         <div style={styles.actions}>
           <span style={styles.count}>
@@ -153,7 +173,8 @@ export default function RelatorioExumacoes() {
               fontWeight: "600",
               fontSize: isMobile ? "12px" : "14px",
               boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              transition: "all 0.2s ease"
+              transition: "all 0.2s ease",
+              
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
             onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
@@ -171,9 +192,10 @@ export default function RelatorioExumacoes() {
             </button>
           )}
         </div>
-      </div>
+</div>
 
       {/* TABELA */}
+
       <ContainerTabela>
 
         {loading ? (
@@ -270,7 +292,8 @@ export default function RelatorioExumacoes() {
 
         )}
       </ContainerTabela>
-  </div>
+      </div>  
+      
     </ContainerPagina>
   );
 }
@@ -281,7 +304,8 @@ export default function RelatorioExumacoes() {
 const styles = {
   header: {
    
-    flex: "2",
+        //flexDirection: isMobile ? "column" : "row",
+        //alignItems: isMobile ? "stretch" : "center",
     
     borderRadius: '6px',
     border: '1px solid #cbd5e0',
@@ -291,21 +315,22 @@ const styles = {
     appearance: "none",
     WebkitAppearance: "none",
 
-    //display: "flex",
+    display: "flex",
     flexWrap: "wrap",
     justifyContent: "space-between",
     gap: "8px",
     marginBottom: "-8px",
     marginTop: "-5px",
-//    marginLeft: '-20px',
-//    marginR: '-20px',
   padding: '10px',
 
-
+  
+  
+  
   },
 
   searchBox: {
     display: "flex",
+    
     alignItems: "center",
     justifyContent: "space-between",
     gap: "8px",
@@ -313,7 +338,8 @@ const styles = {
     border: "1px solid #e2e8f0",
     borderRadius: "6px",
     padding: "8px 12px",
-    marginBottom: '5px'
+    marginBottom: '5px',
+
   },
 
   input: {
@@ -325,13 +351,15 @@ const styles = {
   actions: {
     display: "flex",
     alignItems: "center",
-    gap: "10px"
+    gap: "10px",
+    marginBottom: '-5px'
   },
 
   count: {
     fontSize: 13,
     color: "#64748b",
-    fontWeight: 600
+    fontWeight: 600,
+    marginBottom: '3px'
   },
 
   btnPdf: {

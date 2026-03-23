@@ -359,18 +359,15 @@ const styles = {
     border: "1px solid #cbd5e0",
     fontSize: '14px',
     background: "#fff",
+    color: '#2d3748',
+  //appearance: "none",
+  WebkitAppearance: "none",
 
-
-  padding: '10px',
-  borderRadius: '6px',
-  border: '1px solid #cbd5e0',
-  fontSize: '1rem',
-  background: '#ffffff',
-  color: '#2d3748',
-  appearance: "none",
-  WebkitAppearance: "none"
-
-
+    //padding: isMobile ? "10px" : "15px",
+    
+    boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+    
+    
   },
 
 gridCards: {
