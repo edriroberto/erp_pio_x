@@ -111,7 +111,16 @@ export default function RelatorioExumacoes() {
   // ==============================
   return (
     <ContainerPagina titulo="Histórico de Exumações">
-
+<div style={{
+        display: "flex",
+        margin: '0 -18px',
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "stretch" : "center",
+        justifyContent: "space-between",
+        gap: isMobile ? "15px" : "10px",
+        marginBottom: "5px",
+        marginTop: "-5px"
+      }}>
       {/* HEADER */}
       <div style={styles.header}>
         
@@ -261,6 +270,7 @@ export default function RelatorioExumacoes() {
 
         )}
       </ContainerTabela>
+  </div>
     </ContainerPagina>
   );
 }
