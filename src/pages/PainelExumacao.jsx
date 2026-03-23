@@ -349,7 +349,7 @@ const styles = {
     marginTop: "-20px",
     flexWrap: 'wrap'
   },
-  
+
   select: {
     flex: "1",
     minWidth: "200px",
@@ -358,7 +358,19 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #cbd5e0",
     fontSize: '14px',
-    background: "#fff"
+    background: "#fff",
+
+
+  padding: '10px',
+  borderRadius: '6px',
+  border: '1px solid #cbd5e0',
+  fontSize: '1rem',
+  background: '#ffffff',
+  color: '#2d3748',
+  appearance: "none",
+  WebkitAppearance: "none"
+
+
   },
 
 gridCards: {
