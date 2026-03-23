@@ -270,12 +270,28 @@ export default function RelatorioExumacoes() {
 // ==============================
 const styles = {
   header: {
-    display: "flex",
+   
+    flex: "2",
+    
+    borderRadius: '6px',
+    border: '1px solid #cbd5e0',
+    fontSize: '1rem',
+    background: '#ffffff',
+    color: '#2d3748',
+    appearance: "none",
+    WebkitAppearance: "none",
+
+    //display: "flex",
     flexWrap: "wrap",
     justifyContent: "space-between",
     gap: "8px",
     marginBottom: "-8px",
-    marginTop: "-5px"
+    marginTop: "-5px",
+//    marginLeft: '-20px',
+//    marginR: '-20px',
+  padding: '10px',
+
+
   },
 
   searchBox: {
@@ -285,8 +301,9 @@ const styles = {
     gap: "8px",
     background: "#fff",
     border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    padding: "8px 12px"
+    borderRadius: "6px",
+    padding: "8px 12px",
+    marginBottom: '5px'
   },
 
   input: {
