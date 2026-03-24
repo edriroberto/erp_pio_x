@@ -129,7 +129,7 @@ export default function Dashboard() {
         padding: isMobile ? 12 : 20,
         background: "#f5f6fa",
         fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto',
-        margin: '0px -20px 0px -20px'
+        margin: '0px -10px 0px -10px'
       }}
     >
       <h2 style={{ 
@@ -148,7 +148,8 @@ export default function Dashboard() {
           display: "grid",
           gridTemplateColumns: "repeat(3,1fr)",
           gap: 8,
-          marginBottom: 16
+          marginBottom: 16,
+          
         }}
       >
         <DashboardCard titulo="Sepultamentos" valor={totais.sepultamentos} cor="#4a90e2" />
@@ -173,6 +174,7 @@ export default function Dashboard() {
             borderRadius: 14,
             padding: 12,
             marginBottom: 16,
+            
             boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
           }}
         >

@@ -1,37 +1,41 @@
 import React, { useState, useEffect } from "react";
 
 export default function ContainerPagina({ titulo, children }) {
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 768 : false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
+const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: isMobile ? "12px" : "20px",
-      minHeight: "100dvh", 
-      width: "100%",
-      background: "#f8fafc", // Um tom mais moderno e limpo
-      padding: isMobile ? "16px 0" : "24px", // Sangrado no mobile
-      boxSizing: "border-box",
-    }}>
+
+    <div
+      style={{
+
+        
+        //antes
+        minHeight: "100vh",         
+        background: "#f2f2f7",    
+        padding: isMobile ? 4 : "15px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",       
+        boxSizing: "border-box",
+        margin: '0 -20px 0 -15px',
+       
+        //sem uso
+        //minHeight: "0", 
+        // width: "100%",
+
+      }}
+    >
+
       {titulo && (
-        <h2 style={{ 
-          margin: 0, 
-          padding: isMobile ? "0 16px" : "0",
-          fontSize: isMobile ? "22px" : "28px",
-          fontWeight: "800",
-          color: "#1e293b"
-        }}>
+        <h3 style={{ margin: 0 }}>
           {titulo}
-        </h2>
+        </h3>
+        
       )}
+
       {children}
+
     </div>
-  );
+
+  )
+
 }

@@ -7,15 +7,16 @@ export default function DashboardCard({ titulo, valor, cor }) {
       borderRadius:10,
       padding:"6px 10px",
       boxShadow:"0 1px 3px rgba(0,0,0,0.08)",
-      borderTop:`1px solid ${cor || "#4a90e2"}`
+      borderTop:`1px solid ${cor || "#4a90e2"}`,
+      
     }}>
 
       <div style={{
         fontSize:12,
         color:"#777",
-        marginBottom:-5,
-        margin: -5,
-        lineHeight: 1.1
+        textAlign: "center",
+        margin: '-3 0 -3 0' ,
+        lineHeight: 1.3
       }}>
         {titulo}
       </div>
