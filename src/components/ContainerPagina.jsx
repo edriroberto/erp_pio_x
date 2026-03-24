@@ -16,7 +16,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
         gap: "16px",
        // width: "100%",
         boxSizing: "border-box",
-       // margin: '-5px -1px -5px -18px',
+        margin: '-5px -18px -5px -18px',
         
       }}
     >
