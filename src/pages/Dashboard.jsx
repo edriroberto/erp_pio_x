@@ -120,6 +120,7 @@ export default function Dashboard() {
   }
 
   return (
+    
     <div
       style={{
         display: "flex",
@@ -127,7 +128,8 @@ export default function Dashboard() {
         height: "100%",
         padding: isMobile ? 12 : 20,
         background: "#f5f6fa",
-        fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto'
+        fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto',
+        margin: '0px -20px 0px -20px'
       }}
     >
       <h2 style={{ 
@@ -307,5 +309,6 @@ export default function Dashboard() {
     
     
     </div>
+ 
   );
 }
