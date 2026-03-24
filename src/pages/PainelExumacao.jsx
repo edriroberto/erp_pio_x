@@ -361,7 +361,7 @@ const styles = {
     background: "#fff",
     color: '#2d3748',
   //appearance: "none",
-  WebkitAppearance: "none",
+  //WebkitAppearance: "none",
 
     //padding: isMobile ? "10px" : "15px",
     

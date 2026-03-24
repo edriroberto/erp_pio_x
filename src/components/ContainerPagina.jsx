@@ -1,16 +1,24 @@
-export default function ContainerPagina({ titulo, children }) {
+import React, { useState, useEffect } from "react";
 
+export default function ContainerPagina({ titulo, children }) {
+const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   return (
 
     <div
       style={{
-        padding: "20px",
+
+       
+        minHeight: "100vh", 
+        background: "#f2f2f7",
+    
+        
+        padding: isMobile ? "5px" : "15px",
         display: "flex",
         flexDirection: "column",
         gap: "16px",
         width: "100%",
         boxSizing: "border-box",
-        marginTop: -15,
+       // margin: '-5px -18px -5px -18px',
         
       }}
     >

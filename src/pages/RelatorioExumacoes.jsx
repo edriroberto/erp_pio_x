@@ -114,7 +114,7 @@ export default function RelatorioExumacoes() {
 <ContainerPagina>
 <div style={{
         //display: "flex",
-        margin: '0 -18px',
+   //     margin: '0 -18px',
         flexDirection: isMobile ? "column" : "row",
         alignItems: isMobile ? "stretch" : "center",
         justifyContent: "space-between",
