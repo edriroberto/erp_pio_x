@@ -162,7 +162,8 @@ export default function Dashboard() {
           flex: 1,
           overflowY: "auto",
           overflowX: "hidden",
-          paddingRight: 4
+          paddingRight: 4,
+          margin: '0 -20px 0 -15px'
         }}
       >
         {/* Gráfico */}

@@ -14,7 +14,7 @@ export default function DashboardCard({ titulo, valor, cor }) {
         fontSize:12,
         color:"#777",
         marginBottom:-5,
-        marginTop: -5,
+        margin: -5,
         lineHeight: 1.1
       }}>
         {titulo}
