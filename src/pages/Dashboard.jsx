@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle } from "lucide-react"; // Novo ícone
+import { AlertCircle } from "lucide-react"; 
+
+// Importando as funções utilitárias
+import { formatarData, calcularIdade } from "../utils/formatarData";
 
 import {
   BarChart,
@@ -16,15 +19,15 @@ import {
 
 import DashboardCard from "../components/DashboardCard";
 import SepultamentoCard from "../components/SepultamentoCard";
-import ContainerTabela from "../components/ContainerTabela"; // Importado para manter o padrão
-import "../styles/tabela.css"; // Importado para usar os estilos de tabela
+import ContainerTabela from "../components/ContainerTabela";
 import ContainerPagina from "../components/ContainerPagina";
+import "../styles/tabela.css";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [grafico, setGrafico] = useState([]);
   const [ultimos, setUltimos] = useState([]);
-  const [selecionado, setSelecionado] = useState(null); // Adicionado para controle de seleção
+  const [selecionado, setSelecionado] = useState(null);
   const [totais, setTotais] = useState({
     sepultamentos: 0,
     falecimentos: 0,
@@ -47,22 +50,6 @@ export default function Dashboard() {
 
   function abrirCadastro(id) {
     navigate(`/cadastroSepultamento/${id}`);
-  }
-
-  function calcularIdade(dataNascimento, dataFalecimento) {
-    if (!dataNascimento || !dataFalecimento) return "";
-    const nasc = new Date(dataNascimento);
-    const falec = new Date(dataFalecimento);
-    let idade = falec.getFullYear() - nasc.getFullYear();
-    const m = falec.getMonth() - nasc.getMonth();
-    if (m < 0 || (m === 0 && falec.getDate() < nasc.getDate())) idade--;
-    return idade;
-  }
-
-  function formatar(data) {
-    if (!data) return "";
-    const [ano, mes, dia] = data.split("-");
-    return `${dia}/${mes}/${ano}`;
   }
 
   const formatChave = (ano, mes) => `${ano}-${String(mes).padStart(2, "0")}`;
@@ -120,7 +107,6 @@ export default function Dashboard() {
   }
 
   return (
-    
     <div
       style={{
         display: "flex",
@@ -137,47 +123,39 @@ export default function Dashboard() {
         fontSize: isMobile ? "20px" : "24px", 
         color: "#1a202c" ,
         marginTop: "-20px"
-        }}>
-          Dashboard
-        </h2>
-      
+      }}>
+        Dashboard
+      </h2>
 
       {/* KPIs */}
-      <div
-        style={{
+      <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3,1fr)",
           gap: 8,
           marginBottom: 16,
-          
-        }}
-      >
+      }}>
         <DashboardCard titulo="Sepultamentos" valor={totais.sepultamentos} cor="#4a90e2" />
         <DashboardCard titulo="Falecimentos" valor={totais.falecimentos} cor="#34a853" />
         <DashboardCard titulo="Pendentes" valor={totais.pendentes} cor="#ea4335" />
       </div>
-              
+
       {/* Container rolagem */}
-      <div
-        style={{
+      <div style={{
           flex: 1,
           overflowY: "auto",
           overflowX: "hidden",
           paddingRight: 4,
           margin: '0 -20px 0 -15px'
-        }}
-      >
+      }}>
+        
         {/* Gráfico */}
-        <div
-          style={{
+        <div style={{
             background: "#fff",
             borderRadius: 14,
             padding: 12,
             marginBottom: 16,
-            
             boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
-          }}
-        >
+        }}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
             Sepultamentos últimos 12 meses
           </div>
@@ -200,118 +178,91 @@ export default function Dashboard() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        
+        </div>
 
         {/* LISTA DE ÚLTIMOS SEPULTAMENTOS */}
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Últimos Sepultamentos</div>
+        <div style={{ padding: "0 15px" }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Últimos Sepultamentos</div>
 
-        {isMobile ? (
-          // MOBILE: Usa a lista de cards (DIVs)
-          ultimos.map(s => (
-            <SepultamentoCard
-              key={s.id}
-              dado={{
-                id: s.id,
-                nome: s.nome,
-                nascimento: formatar(s.data_nascimento),
-                falecimento: formatar(s.data_falecimento),
-                quadra: s.quadra,
-                lote: s.lote,
-                gaveta: s.gaveta,
-                funeraria: s.funeraria,
-                idade: calcularIdade(s.data_nascimento, s.data_falecimento),
-                obito_entregue: Boolean(s.obito_entregue),
-                observacoes: s.observacoes
-              }}
-              selecionado={selecionado?.id === s.id}
-              onClick={() => {
-                setSelecionado(s);
-                abrirCadastro(s.id);
-              }}
-            />
-          ))
-        ) : (
-          // DESKTOP: Usa a técnica de tabela do sepultamentos.jsx
-          <ContainerTabela>
-            
-            <table className="tabela">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Quadra</th>
-                  <th style={{ textAlign: 'center' }}>Lote</th>
-                  <th style={{ textAlign: 'center' }}>Gaveta</th>
-                  <th>Nascimento</th>
-                  <th>Falecimento</th>
-                  <th style={{ textAlign: 'center' }}>Idade</th>
-                  <th>Funerária</th>
-                  <th>Observações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ultimos.map((s) => {
-                  const selecionadoLinha = selecionado?.id === s.id;
-                  const pendenciaObito = s.obito_entregue === false;
-                  
-                  // Mesma lógica de cores de Sepultamentos.jsx
-                  let corFundo = "transparent";
-                  if (selecionadoLinha) {
-                    corFundo = "#ebf8ff";
-                  } else if (pendenciaObito) {
-                    corFundo = "#fff5f5";
-                  }
+          {isMobile ? (
+            ultimos.map(s => (
+              <SepultamentoCard
+                key={s.id}
+                dado={{
+                  ...s,
+                  nascimento: formatarData(s.data_nascimento),
+                  falecimento: formatarData(s.data_falecimento),
+                  idade: calcularIdade(s.data_nascimento, s.data_falecimento)
+                }}
+                selecionado={selecionado?.id === s.id}
+                onClick={() => {
+                  setSelecionado(s);
+                  abrirCadastro(s.id);
+                }}
+              />
+            ))
+          ) : (
+            <ContainerTabela>
+              <table className="tabela">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Quadra</th>
+                    <th style={{ textAlign: 'center' }}>Lote</th>
+                    <th style={{ textAlign: 'center' }}>Gaveta</th>
+                    <th>Nascimento</th>
+                    <th>Falecimento</th>
+                    <th style={{ textAlign: 'center' }}>Idade</th>
+                    <th>Funerária</th>
+                    <th>Observações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ultimos.map((s) => {
+                    const selecionadoLinha = selecionado?.id === s.id;
+                    const pendenciaObito = s.obito_entregue === false;
+                    
+                    let corFundo = selecionadoLinha ? "#ebf8ff" : (pendenciaObito ? "#fff5f5" : "transparent");
 
-                  return (
-                    <tr
-                      key={s.id}
-                      onClick={() => setSelecionado(s)}
-                      onDoubleClick={() => abrirCadastro(s.id)}
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor: corFundo,
-                        color: selecionadoLinha ? "#2b6cb0" : (pendenciaObito ? "#c53030" : "inherit"),
-                        fontWeight: selecionadoLinha ? "600" : "400",
-                        transition: "background-color .2s"
-                      }}
-                      className="linha-tabela"
-                    >
-                      <td style={{ fontWeight: '500' }}>
-                        {pendenciaObito && <span title="Óbito pendente" style={{ marginRight: 5 }}><AlertCircle 
-                                                  size={13} 
-                                                  color="#e53e3e" 
-                                                  strokeWidth={2}
-                                                //  title="Óbito pendente" 
-                                                />
-                                      </span>}
-                        {s.nome}
-                      </td>
-                      
-                      <td>{s.quadra}</td>
-                      <td style={{ textAlign: 'center' }}>{s.lote}</td>
-                      <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
-                      <td>{formatar(s.data_nascimento)}</td>
-                      <td>{formatar(s.data_falecimento)}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        {calcularIdade(s.data_nascimento, s.data_falecimento)}
-                      </td>
-                      <td>{s.funeraria}</td>
-                      <td style={{ fontSize: 11, color: pendenciaObito ? "#c53030" : "#666" }}>
-                        {s.observacoes}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </ContainerTabela>
-        )}
-        
+                    return (
+                      <tr
+                        key={s.id}
+                        onClick={() => setSelecionado(s)}
+                        onDoubleClick={() => abrirCadastro(s.id)}
+                        style={{
+                          cursor: "pointer",
+                          backgroundColor: corFundo,
+                          color: selecionadoLinha ? "#2b6cb0" : (pendenciaObito ? "#c53030" : "inherit"),
+                          fontWeight: selecionadoLinha ? "600" : "400",
+                          transition: "background-color .2s"
+                        }}
+                        className="linha-tabela"
+                      >
+                        <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          {pendenciaObito && <AlertCircle size={14} color="#e53e3e" strokeWidth={2.5} />}
+                          {s.nome}
+                        </td>
+                        <td>{s.quadra}</td>
+                        <td style={{ textAlign: 'center' }}>{s.lote}</td>
+                        <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
+                        <td>{formatarData(s.data_nascimento)}</td>
+                        <td>{formatarData(s.data_falecimento)}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          {calcularIdade(s.data_nascimento, s.data_falecimento)}
+                        </td>
+                        <td>{s.funeraria}</td>
+                        <td style={{ fontSize: 11, color: pendenciaObito ? "#c53030" : "#666" }}>
+                          {s.observacoes}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </ContainerTabela>
+          )}
         </div>
-        
       </div>
-    
-    
     </div>
- 
   );
 }

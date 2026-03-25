@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
-import { AlertCircle, UserSearch } from "lucide-react"; // Ícones modernos
+import { AlertCircle, UserSearch } from "lucide-react"; 
+
+// Hooks e Componentes
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
 import SepultamentoSearchBar from "../components/SepultamentoSearchBar";
+
+// Utilitários padronizados
+import { formatarData, calcularIdade } from "../utils/formatarData";
 
 import "../styles/tabela.css";
 
@@ -18,49 +23,37 @@ export default function SepultamentosPorNome() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Busca sempre que o termo de busca mudar
   useEffect(() => {
     buscar();
   }, [busca]);
 
-  function calcularIdade(dataNasc, dataFalec) {
-    if (!dataNasc || !dataFalec) return "N/A";
-    const nasc = new Date(dataNasc);
-    const falec = new Date(dataFalec);
-    let idade = falec.getFullYear() - nasc.getFullYear();
-    const m = falec.getMonth() - nasc.getMonth();
-    if (m < 0 || (m === 0 && falec.getDate() < nasc.getDate())) idade--;
-    return idade;
-  }
-
   async function buscar() {
-    let query = supabase.from("vw_sepultamentos_v1").select("*").order("nome");
-    
-    if (busca.trim() !== "") {
-      query = query.ilike("nome", `%${busca}%`);
-    }
+    try {
+      let query = supabase.from("vw_sepultamentos_v1").select("*").order("nome");
+      
+      if (busca.trim() !== "") {
+        query = query.ilike("nome", `%${busca}%`);
+      }
 
-    const { data, error } = await query;
-    if (error) {
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Usando a lógica centralizada para garantir consistência
+        const dadosProcessados = data.map(s => ({
+          ...s,
+          idadeExibicao: calcularIdade(s.data_nascimento, s.data_falecimento)
+        }));
+        setDados(dadosProcessados);
+      }
+    } catch (error) {
       console.error("Erro na busca:", error.message);
-      return;
-    }
-    
-    if (data) {
-      const dadosComIdade = data.map(s => ({
-        ...s,
-        idade: calcularIdade(s.data_nascimento, s.data_falecimento)
-      }));
-      setDados(dadosComIdade);
     }
   }
 
-  function formatarData(data) {
-    if (!data) return "";
-    const [year, month, day] = data.split("-");
-    return `${day}/${month}/${year}`;
-  }
-
-  // Componente de Cartão Mobile Refatorado
+  // Componente de Cartão Mobile (Mantendo seu Design Original)
   const CartaoMobileBusca = ({ s }) => {
     const pendencia = s.obito_entregue === false;
     return (
@@ -93,7 +86,7 @@ export default function SepultamentosPorNome() {
           borderTop: "1px solid rgba(0,0,0,0.04)"
         }}>
           <span style={{ color: "#94a3b8" }}>Falecimento: {formatarData(s.data_falecimento)}</span>
-          <span style={{ color: "#1a202c" }}>Idade: <strong>{s.idade} anos</strong></span>
+          <span style={{ color: "#1a202c" }}>Idade: <strong>{s.idadeExibicao} anos</strong></span>
         </div>
       </div>
     );
@@ -112,7 +105,7 @@ export default function SepultamentosPorNome() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <UserSearch size={24} color="#4fd1c5" />
-          <h2 style={{ margin: 0, fontSize: "22px" }}>Consulta por Nome</h2>
+          <h2 style={{ margin: 0, fontSize: "22px", color: "#1a202c" }}>Consulta por Nome</h2>
         </div>
 
         <div style={{ flex: 1, maxWidth: isMobile ? "100%" : "450px" }}>
@@ -148,7 +141,7 @@ export default function SepultamentosPorNome() {
                 <th>Nascimento</th>
                 <th>Falecimento</th>
                 <th>Sepultamento</th>
-                <th>Idade</th>
+                <th style={{ textAlign: 'center' }}>Idade</th>
                 <th>Funerária</th>
                 <th>Observações</th>
               </tr>
@@ -167,6 +160,7 @@ export default function SepultamentosPorNome() {
                       color: textColor,
                       transition: "background 0.2s"
                     }}
+                    className="linha-tabela"
                   >
                     <td style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                       {pendencia && <AlertCircle size={16} color="#ef4444" strokeWidth={2.5} />}
@@ -174,11 +168,11 @@ export default function SepultamentosPorNome() {
                     </td>
                     <td>{s.quadra}</td>
                     <td>{s.lote}</td>
-                    <td>{s.gaveta}</td>
+                    <td>{s.gaveta || "-"}</td>
                     <td>{formatarData(s.data_nascimento)}</td>
                     <td>{formatarData(s.data_falecimento)}</td>
                     <td>{formatarData(s.data_sepultamento)}</td>
-                    <td>{s.idade}</td>
+                    <td style={{ textAlign: 'center' }}>{s.idadeExibicao}</td>
                     <td>{s.funeraria}</td>
                     <td style={{ 
                       fontSize: "11px", 

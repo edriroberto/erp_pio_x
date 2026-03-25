@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "../utils/supabaseClient";
+import { useIsMobile } from "../Hooks/useMobile";
+import { formatarData } from "../utils/formatarData"; // Importação adicionada
 
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
@@ -7,30 +9,17 @@ import ExumacaoLogList from "../components/ExumacaoLogList";
 import SepultamentoSearchBar from "../components/SepultamentoSearchBar";
 
 import { gerarRelatorioExumacoes } from "../utils/relatorioPDF";
-
-import { FileText, Trash2, Search } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
 
 import "../styles/tabela.css";
 
 export default function RelatorioExumacoes() {
+  const isMobile = useIsMobile();
   const [dados, setDados] = useState([]);
   const [busca, setBusca] = useState("");
   const [selecionado, setSelecionado] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  
-  // ==============================
-  // RESPONSIVO
-  // ==============================
-  useEffect(() => {
-    const resize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
 
-  // ==============================
-  // CARREGAR DADOS
-  // ==============================
   useEffect(() => {
     carregar();
   }, []);
@@ -44,7 +33,6 @@ export default function RelatorioExumacoes() {
         .order("data_exumacao", { ascending: false });
 
       if (error) throw error;
-
       setDados(data || []);
     } catch (err) {
       console.error("Erro ao carregar:", err.message);
@@ -53,14 +41,11 @@ export default function RelatorioExumacoes() {
     }
   }
 
-  // ==============================
-  // FILTRO (MEMOIZADO)
-  // ==============================
   const dadosFiltrados = useMemo(() => {
+    if (!dados) return [];
     if (!busca) return dados;
 
     const t = busca.toLowerCase();
-
     return dados.filter(item =>
       item.nome_falecido?.toLowerCase().includes(t) ||
       item.quadra_lote?.toLowerCase().includes(t) ||
@@ -68,31 +53,12 @@ export default function RelatorioExumacoes() {
     );
   }, [busca, dados]);
 
-  // ==============================
-  // FORMATAÇÕES
-  // ==============================
-
-
-  const formatarData = (dataISO) => {
-    if (!dataISO) return "—";
-    const data = new Date(dataISO);
-  if (isNaN(data)) return "";
-    return data.toLocaleDateString("pt-BR");
-  };
-  // ==============================
   // AÇÕES
-  // ==============================
   const handleExcluir = async (item) => {
-    const confirmou = window.confirm(
-      `Deseja remover o registro de ${item.nome_falecido}?`
-    );
+    const confirmou = window.confirm(`Deseja remover o registro de ${item.nome_falecido}?`);
     if (!confirmou) return;
 
-    const { error } = await supabase
-      .from("exumacoes")
-      .delete()
-      .eq("id", item.id);
-
+    const { error } = await supabase.from("exumacoes").delete().eq("id", item.id);
     if (error) return alert("Erro ao excluir: " + error.message);
 
     setSelecionado(null);
@@ -100,52 +66,17 @@ export default function RelatorioExumacoes() {
   };
 
   const handleGerarPDF = () => {
-    if (dadosFiltrados.length === 0) {
-      return alert("Não há dados para gerar o PDF");
-    }
-
+    if (dadosFiltrados.length === 0) return alert("Não há dados para gerar o PDF");
     gerarRelatorioExumacoes(dadosFiltrados);
   };
 
-  // ==============================
-  // RENDER
-  // ==============================
   return (
-<ContainerPagina>
-<div style={{
-        //display: "flex",
-   //     margin: '0 -18px',
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: isMobile ? "stretch" : "center",
-        justifyContent: "space-between",
-        gap: isMobile ? "15px" : "10px",
-        marginBottom: "5px",
-        marginTop: "-5px"
-      }}>
-
-{/* HEADER DE BUSCA */}
+    <ContainerPagina>
       <div style={{
-        borderRadius: '6px',
-        border: '1px solid #cbd5e0',
-        fontSize: '1rem',
-        background: '#ffffff',
-        color: '#2d3748',
-        appearance: "none",
-        WebkitAppearance: "none",
-
-        justifyContent: "space-between",
-        
-        padding: '10px',
-    
-        display: "flex",
-        flexWrap: 'wrap',
+        ...styles.searchHeader,
         flexDirection: isMobile ? "column" : "row",
         alignItems: isMobile ? "stretch" : "center",
-        gap: "1px",
-        marginBottom: "5px",
-        marginTop: "-10px"
       }}>
-        
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <Search size={24} color="#4fd1c5" />
           <h2 style={{ margin: 0, fontSize: "20px" }}>Histórico de Exumações</h2>
@@ -156,67 +87,36 @@ export default function RelatorioExumacoes() {
         </div>    
 
         <div style={styles.actions}>
-          <span style={styles.count}>
-            {dadosFiltrados.length} registros
-          </span>
-
+          <span style={styles.count}>{dadosFiltrados.length} registros</span>
           <button onClick={handleGerarPDF} style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: isMobile ? "6px 12px" : "10px 18px",
-              background: "linear-gradient(135deg, #ef4444, #dc2626)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: isMobile ? "12px" : "14px",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              transition: "all 0.2s ease",
-              
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
-            >
-              📄 PDF
-            </button>
+            ...styles.btnPdfPersonalizado,
+            padding: isMobile ? "6px 12px" : "10px 18px",
+            fontSize: isMobile ? "12px" : "14px",
+          }}>📄 PDF</button>
 
           {selecionado && (
-            <button
-              onClick={() => handleExcluir(selecionado)}
-              style={styles.btnDelete}
-            >
-              <Trash2 size={16} />
-              Excluir
+            <button onClick={() => handleExcluir(selecionado)} style={styles.btnDelete}>
+              <Trash2 size={16} /> Excluir
             </button>
           )}
         </div>
-</div>
-
-      {/* TABELA */}
+      </div>
 
       <ContainerTabela>
-
         {loading ? (
           <div style={styles.empty}>Carregando dados...</div>
         ) : dadosFiltrados.length === 0 ? (
-          <div style={styles.empty}>
-            Nenhum registro encontrado
-          </div>
+          <div style={styles.empty}>Nenhum registro encontrado</div>
         ) : isMobile ? (
-
           <div style={{ paddingBottom: 20 }}>
             <ExumacaoLogList
               dados={dadosFiltrados}
               selecionado={selecionado}
               onSelecionar={setSelecionado}
-              formatarData={formatarData}
+              formatarData={formatarData} // Passando a função do seu utilitário
             />
           </div>
-
         ) : (
-
           <table className="tabela">
             <thead>
               <tr>
@@ -228,7 +128,6 @@ export default function RelatorioExumacoes() {
                 <th></th>
               </tr>
             </thead>
-
             <tbody>
               {dadosFiltrados.map((item) => {
                 const isSelected = selecionado?.id === item.id;
@@ -241,46 +140,23 @@ export default function RelatorioExumacoes() {
                     onClick={() => setSelecionado(item)}
                     style={{
                       cursor: "pointer",
-                      backgroundColor:
-                        isSelected
-                          ? "#ebf8ff"
-                          : isFam
-                          ? "#e6fffa"
-                          : isOss
-                          ? "#fffaf0"
-                          : "transparent",
+                      backgroundColor: isSelected ? "#ebf8ff" : isFam ? "#e6fffa" : isOss ? "#fffaf0" : "transparent",
                     }}
                   >
-                    <td>{formatarData(item.data_exumacao)}</td>
-
-                    <td style={{ fontWeight: 600 }}>
-                      {item.nome_falecido}
-                    </td>
-
+                    {/* AQUI: Usando o seu formatarData.js */}
+                    <td>{formatarData(item.data_exumacao)}</td> 
+                    <td style={{ fontWeight: 600 }}>{item.nome_falecido}</td>
                     <td>{item.quadra_lote || "—"}</td>
-
                     <td>
-                      <span
-                        style={{
-                          ...styles.badge,
-                          background: isOss ? "#fbd38d" : "#b2f5ea",
-                          color: isOss ? "#744210" : "#234e52",
-                        }}
-                      >
-                        {item.destino}
-                      </span>
+                      <span style={{
+                        ...styles.badge,
+                        background: isOss ? "#fbd38d" : "#b2f5ea",
+                        color: isOss ? "#744210" : "#234e52",
+                      }}>{item.destino}</span>
                     </td>
-
                     <td>{item.responsavel}</td>
-
                     <td>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExcluir(item);
-                        }}
-                        style={styles.btnIcon}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); handleExcluir(item); }} style={styles.btnIcon}>
                         🗑️
                       </button>
                     </td>
@@ -289,123 +165,19 @@ export default function RelatorioExumacoes() {
               })}
             </tbody>
           </table>
-
         )}
       </ContainerTabela>
-      </div>  
-      
     </ContainerPagina>
   );
 }
 
-// ==============================
-// ESTILOS
-// ==============================
 const styles = {
-  header: {
-   
-        //flexDirection: isMobile ? "column" : "row",
-        //alignItems: isMobile ? "stretch" : "center",
-    
-    borderRadius: '6px',
-    border: '1px solid #cbd5e0',
-    fontSize: '1rem',
-    background: '#ffffff',
-    color: '#2d3748',
-    appearance: "none",
-    WebkitAppearance: "none",
-
-    display: "flex",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: "8px",
-    marginBottom: "-8px",
-    marginTop: "-5px",
-  padding: '10px',
-
-  
-  
-  
-  },
-
-  searchBox: {
-    display: "flex",
-    
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "8px",
-    background: "#fff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "6px",
-    padding: "8px 12px",
-    marginBottom: '5px',
-
-  },
-
-  input: {
-    border: "none",
-    outline: "none",
-    fontSize: "14px"
-  },
-
-  actions: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginBottom: '-5px'
-  },
-
-  count: {
-    fontSize: 13,
-    color: "#64748b",
-    fontWeight: 600,
-    marginBottom: '3px'
-  },
-
-  btnPdf: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "8px 14px",
-    background: "#ef4444",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: 13,
-    fontWeight: 600
-  },
-
-  btnDelete: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "8px 14px",
-    background: "#fff5f5",
-    color: "#e53e3e",
-    border: "1px solid #feb2b2",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: 13,
-    fontWeight: 600
-  },
-
-  btnIcon: {
-    background: "none",
-    border: "none",
-    cursor: "pointer"
-  },
-
-  badge: {
-    padding: "4px 10px",
-    borderRadius: "12px",
-    fontSize: "11px",
-    fontWeight: "bold"
-  },
-
-  empty: {
-    textAlign: "center",
-    padding: "30px",
-    color: "#94a3b8"
-  }
+  searchHeader: { borderRadius: '6px', border: '1px solid #cbd5e0', background: '#ffffff', padding: '10px', display: "flex", flexWrap: 'wrap', justifyContent: "space-between", gap: "10px", marginBottom: "15px", marginTop: "-10px" },
+  actions: { display: "flex", alignItems: "center", gap: "10px" },
+  count: { fontSize: 13, color: "#64748b", fontWeight: 600 },
+  btnPdfPersonalizado: { display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" },
+  btnDelete: { display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", background: "#fff5f5", color: "#e53e3e", border: "1px solid #feb2b2", borderRadius: "6px", cursor: "pointer", fontSize: 13, fontWeight: 600 },
+  btnIcon: { background: "none", border: "none", cursor: "pointer", fontSize: "16px" },
+  badge: { padding: "4px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold", display: "inline-block" },
+  empty: { textAlign: "center", padding: "30px", color: "#94a3b8" }
 };

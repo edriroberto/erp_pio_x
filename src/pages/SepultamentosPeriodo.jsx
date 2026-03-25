@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
-import { Calendar, FileText, Filter, AlertCircle, Search } from "lucide-react";
+import { Calendar, FileText, Filter, AlertCircle } from "lucide-react";
+
+// Hooks e Componentes
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
+
+// Utilitários padronizados
+import { formatarData, calcularIdade } from "../utils/formatarData";
 import { gerarRelatorioSepultamentos } from "../utils/relatorioPDF";
+
 import "../styles/tabela.css";
 
 export default function SepultamentosPeriodo() {
@@ -17,6 +23,7 @@ export default function SepultamentosPeriodo() {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
 
+    // Lógica inicial de 3 meses
     const hoje = new Date();
     const tresMesesAtras = new Date();
     tresMesesAtras.setMonth(hoje.getMonth() - 3);
@@ -31,42 +38,38 @@ export default function SepultamentosPeriodo() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  function calcularIdade(dataNasc, dataFalec) {
-    if (!dataNasc || !dataFalec) return "N/A";
-    const nasc = new Date(dataNasc);
-    const falec = new Date(dataFalec);
-    let idade = falec.getFullYear() - nasc.getFullYear();
-    const m = falec.getMonth() - nasc.getMonth();
-    if (m < 0 || (m === 0 && falec.getDate() < nasc.getDate())) idade--;
-    return idade;
-  }
-
   async function carregarDados(inicio, fim) {
+    if (!inicio || !fim) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("vw_sepultamentos_v1")
-      .select("*")
-      .gte("data_falecimento", inicio)
-      .lte("data_falecimento", fim)
-      .order("nome", { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from("vw_sepultamentos_v1")
+        .select("*")
+        .gte("data_falecimento", inicio)
+        .lte("data_falecimento", fim)
+        .order("nome", { ascending: true });
 
-    if (data) {
-      setDados(data.map(s => ({ ...s, idade: calcularIdade(s.data_nascimento, s.data_falecimento) })));
+      if (error) throw error;
+
+      if (data) {
+        // Usando a idade calculada dinamicamente
+        setDados(data.map(s => ({ 
+          ...s, 
+          idadeExibicao: calcularIdade(s.data_nascimento, s.data_falecimento) 
+        })));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error.message);
+    } finally {
+      setLoading(false);
     }
-    if (error) console.error(error);
-    setLoading(false);
   }
 
   const handleGerarPDF = () => {
     if (dados.length === 0) return alert("Não há dados para gerar o PDF");
+    // Usando formatarData do utils para o título do PDF
     gerarRelatorioSepultamentos(dados, formatarData(dataDe), formatarData(dataAte));
   };
-
-  function formatarData(data) {
-    if (!data) return "";
-    const [year, month, day] = data.split("-");
-    return `${day}/${month}/${year}`;
-  }
 
   const CartaoMobilePeriodo = ({ s }) => {
     const pendencia = s.obito_entregue === false;
@@ -84,7 +87,7 @@ export default function SepultamentosPeriodo() {
           <p><strong>LOCAL:</strong> {s.quadra} — <strong>LOTE:</strong> {s.lote}</p>
           <div style={styles.cardFooter}>
             <span>Falec: {formatarData(s.data_falecimento)}</span>
-            <span>Idade: <strong>{s.idade} anos</strong></span>
+            <span>Idade: <strong>{s.idadeExibicao} anos</strong></span>
           </div>
         </div>
       </div>
@@ -94,7 +97,7 @@ export default function SepultamentosPeriodo() {
   return (
     <ContainerPagina titulo="Relatório por Período">
       
-      {/* SEÇÃO DE FILTROS REESTILIZADA */}
+      {/* SEÇÃO DE FILTROS (DESIGN ORIGINAL) */}
       <div style={{
         ...styles.filterContainer,
         flexDirection: isMobile ? "column" : "row",
@@ -106,9 +109,9 @@ export default function SepultamentosPeriodo() {
           display: "flex", 
           gap: "10px", 
           alignItems: "center",
-          marginBottom: "-5px",
+          marginBottom: isMobile ? "10px" : "-5px",
           marginTop: "-5px"
-           }}>
+        }}>
           <div style={styles.inputGroup}>
             <Calendar size={16} color="#64748b" />
             <input 
@@ -166,7 +169,7 @@ export default function SepultamentosPeriodo() {
                 <th>Gaveta</th>
                 <th>Nascimento</th>
                 <th>Falecimento</th>
-                <th>Idade</th>
+                <th style={{ textAlign: 'center' }}>Idade</th>
                 <th>Funerária</th>
                 <th style={{ width: '200px' }}>Observações</th>
               </tr>
@@ -177,6 +180,7 @@ export default function SepultamentosPeriodo() {
                 return (
                   <tr 
                     key={s.id} 
+                    className="linha-tabela"
                     style={{ 
                       backgroundColor: pendencia ? "#fff5f5" : "transparent",
                       color: pendencia ? "#c53030" : "inherit" 
@@ -188,10 +192,10 @@ export default function SepultamentosPeriodo() {
                     </td>
                     <td>{s.quadra}</td>
                     <td>{s.lote}</td>
-                    <td>{s.gaveta}</td>
+                    <td>{s.gaveta || "-"}</td>
                     <td>{formatarData(s.data_nascimento)}</td>
                     <td>{formatarData(s.data_falecimento)}</td>
-                    <td>{s.idade}</td>
+                    <td style={{ textAlign: 'center' }}>{s.idadeExibicao}</td>
                     <td>{s.funeraria}</td>
                     <td style={{ fontSize: '11px', opacity: 0.8 }}>{s.observacoes}</td>
                   </tr>
@@ -205,6 +209,7 @@ export default function SepultamentosPeriodo() {
   );
 }
 
+// MANTENDO SEUS ESTILOS ORIGINAIS
 const styles = {
   filterContainer: {
     display: "flex",
@@ -270,7 +275,6 @@ const styles = {
     padding: "6px 14px",
     borderRadius: "20px"
   },
-  // Estilos Mobile
   mobileCard: {
     background: "#fff",
     borderRadius: "12px",
