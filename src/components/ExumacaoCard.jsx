@@ -64,10 +64,10 @@ const ExumacaoCard = ({ dado, onConfirmar, formatarData }) => {
         gap: "5px",
         marginBottom: "5px"
       }}>
-        <MapPin size={10} />
+        <MapPin size={12} />
         <span>
-          {dado.quadra} • Lote {dado.lote}
-          {dado.gaveta && ` • Gav. ${dado.gaveta}`}
+          {dado.quadra} • {dado.lote}
+          {dado.gaveta && ` • Pos. ${dado.gaveta}`}
         </span>
       </div>
 

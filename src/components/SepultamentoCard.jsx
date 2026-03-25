@@ -72,16 +72,12 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
             <MapPin size={14} color="#718096" />
             <span>{dado.quadra} 
               <span style={{ fontSize: '11px', margin: '0 8px' }}>•</span>
-              {dado.lote} </span>
-              <span style={{ 
-      fontSize: '11px', 
-      marginLeft: 'auto', 
-      //color: '#2b4c9b',
-      //backgroundColor: '#f0f4ff', // Um leve fundo para destacar
-      padding: '2px 6px',
-      borderRadius: '4px'
-    }}>
-      <strong>Gav. {dado.gaveta}</strong></span>
+              {dado.lote} 
+              <span style={{ fontSize: '11px', margin: '0 8px' }}>•</span>
+                Pos. {dado.gaveta}
+              </span>
+      
+      
           </div>
 
         </div>
