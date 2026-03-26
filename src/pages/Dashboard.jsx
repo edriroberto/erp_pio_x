@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle } from "lucide-react"; 
+import { AlertCircle, WifiOff } from "lucide-react"; 
 
 // Importando as funções utilitárias
 import { formatarData, calcularIdade } from "../utils/formatarData";
@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [grafico, setGrafico] = useState([]);
   const [ultimos, setUltimos] = useState([]);
   const [selecionado, setSelecionado] = useState(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [totais, setTotais] = useState({
     sepultamentos: 0,
     falecimentos: 0,
@@ -41,11 +42,22 @@ export default function Dashboard() {
     "#9c27b0", "#ff6b6b", "#00bcd4", "#795548"
   ];
 
+  // Monitorar Redimensionamento e Conexão
   useEffect(() => {
-    carregarDashboard();
     const resize = () => setIsMobile(window.innerWidth <= 768);
+    const handleStatus = () => setIsOffline(!navigator.onLine);
+    
     window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    window.addEventListener("online", handleStatus);
+    window.addEventListener("offline", handleStatus);
+    
+    carregarDashboard();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("online", handleStatus);
+      window.removeEventListener("offline", handleStatus);
+    };
   }, []);
 
   function abrirCadastro(id) {
@@ -68,6 +80,7 @@ export default function Dashboard() {
           .limit(15)
       ]);
 
+      // Processamento do Gráfico...
       const meses12 = [];
       const hoje = new Date();
       for (let i = 11; i >= 0; i--) {
@@ -94,15 +107,35 @@ export default function Dashboard() {
         cor: CORES[idx % CORES.length]
       }));
 
-      setGrafico(dadosComCor);
-      setTotais({
+      const novosTotais = {
         sepultamentos: s.data?.total || 0,
         falecimentos: f.data?.total || 0,
         pendentes: p.data?.total || 0
-      });
+      };
+
+      // ATUALIZA ESTADOS
+      setGrafico(dadosComCor);
+      setTotais(novosTotais);
       setUltimos(l.data || []);
+
+      // PERSISTÊNCIA PWA: Salva o "Snapshot" do Dashboard
+      const snapshot = {
+        grafico: dadosComCor,
+        totais: novosTotais,
+        ultimos: l.data || [],
+        dataHora: new Date().toISOString()
+      };
+      localStorage.setItem("cache_dashboard", JSON.stringify(snapshot));
+
     } catch (e) {
-      console.error("Erro dashboard:", e);
+      console.warn("Erro ao carregar Dashboard. Tentando carregar cache offline...");
+      const cache = localStorage.getItem("cache_dashboard");
+      if (cache) {
+        const snapshot = JSON.parse(cache);
+        setGrafico(snapshot.grafico);
+        setTotais(snapshot.totais);
+        setUltimos(snapshot.ultimos);
+      }
     }
   }
 
@@ -118,11 +151,23 @@ export default function Dashboard() {
         margin: '0px -10px 0px -10px'
       }}
     >
+      {/* BANNER OFFLINE */}
+      {isOffline && (
+        <div style={{
+          background: "#feebc8", color: "#c05621", padding: "8px 15px", 
+          borderRadius: "10px", marginBottom: "12px", display: "flex", 
+          alignItems: "center", gap: "10px", fontSize: "13px", fontWeight: "600",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+        }}>
+          <WifiOff size={16} /> Dashboard Offline (Dados de sua última conexão)
+        </div>
+      )}
+
       <h2 style={{ 
         marginBottom: "16px", 
         fontSize: isMobile ? "20px" : "24px", 
         color: "#1a202c" ,
-        marginTop: "-20px"
+        marginTop: isOffline ? "0px" : "-20px"
       }}>
         Dashboard
       </h2>
@@ -139,7 +184,6 @@ export default function Dashboard() {
         <DashboardCard titulo="Pendentes" valor={totais.pendentes} cor="#ea4335" />
       </div>
 
-      {/* Container rolagem */}
       <div style={{
           flex: 1,
           overflowY: "auto",
@@ -167,8 +211,8 @@ export default function Dashboard() {
                 margin={{ top: 5, right: 20, left: -25, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="mes" />
-                <YAxis />
+                <XAxis dataKey="mes" fontSize={10} />
+                <YAxis fontSize={10} />
                 <Tooltip />
                 <Bar dataKey="total" radius={[6, 6, 0, 0]}>
                   {grafico.map((entry, index) => (
