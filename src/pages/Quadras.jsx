@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
+import { processarEUploadFoto, deletarArquivoStorage } from "../utils/uploadService"; // Importação atualizada
 import "../styles/modal.css"; 
 
 export default function Quadras() {
@@ -26,19 +27,38 @@ export default function Quadras() {
     return () => window.removeEventListener("resize", resize);
   }, []);
 
+  // FUNÇÃO REFATORADA COM LÓGICA DE LIMPEZA DE STORAGE
   async function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Guardamos a referência da foto atual antes de subir a nova
+    const urlAntiga = novoLote.foto_url;
+
     setLoading(true);
-    const fileName = `${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from("lotes").upload(fileName, file);
-    if (error) {
+    try {
+      // 1. Processa, comprime e sobe a nova foto
+      const urlGerada = await processarEUploadFoto(
+        file, 
+        "lotes", 
+        quadraSelecionada?.nome || "geral", 
+        `lote_${loteSelecionado?.numero || 'novo'}`
+      );
+      
+      if (urlGerada) {
+        // 2. Atualiza o estado com a nova URL
+        setNovoLote(prev => ({ ...prev, foto_url: urlGerada }));
+        
+        // 3. Se o upload da nova deu certo e existia uma antiga, removemos o "lixo" do Storage
+        if (urlAntiga) {
+          await deletarArquivoStorage(urlAntiga, "lotes");
+        }
+      }
+    } catch (err) {
+      alert("Erro ao processar imagem: " + err.message);
+    } finally {
       setLoading(false);
-      return alert("Erro ao enviar: " + error.message);
     }
-    const { data } = supabase.storage.from("lotes").getPublicUrl(fileName);
-    setNovoLote(prev => ({ ...prev, foto_url: data.publicUrl }));
-    setLoading(false);
   }
 
   async function carregarQuadras() {
@@ -82,16 +102,13 @@ export default function Quadras() {
     setShowUploadFoto(true);
   }
 
-  // FUNÇÃO REFEITA COM A LÓGICA DE SINCRONIZAÇÃO (DELPHI SERVICE)
   async function handleSalvarLote() {
     if (!quadraSelecionada && !showUploadFoto) return;
-    
     setLoading(true);
     const capacidadeNum = parseInt(novoLote.capacidade);
 
     try {
       if (showUploadFoto) {
-        // Apenas foto
         const { error } = await supabase.from("lotes").update({ foto_url: novoLote.foto_url }).eq("id", loteSelecionado.id);
         if (error) throw error;
       } else {
@@ -104,31 +121,14 @@ export default function Quadras() {
         };
 
         if (modoEdicao) {
-          // 1. Alterar Lote (Equivalente ao LoteService.AlterarLote)
-          const { error: errorUpdate } = await supabase.from("lotes").update(dadosLote).eq("id", novoLote.id);
-          if (errorUpdate) throw errorUpdate;
-
-          // 2. Sincronizar Capacidade (Equivalente ao LoteService.SincronizarCapacidade)
-          const { error: errorRpc } = await supabase.rpc('sincronizar_capacidade_lote', { 
-            p_lote_id: novoLote.id, 
-            p_nova_capacidade: capacidadeNum 
-          });
-          if (errorRpc) throw errorRpc;
-
+          await supabase.from("lotes").update(dadosLote).eq("id", novoLote.id);
+          await supabase.rpc('sincronizar_capacidade_lote', { p_lote_id: novoLote.id, p_nova_capacidade: capacidadeNum });
         } else {
-          // Criar Lote (Equivalente ao LoteService.CriarLote)
           const { data, error: errorInsert } = await supabase.from("lotes").insert([dadosLote]).select().single();
           if (errorInsert) throw errorInsert;
-
-          // Sincronizar as gavetas iniciais para o novo lote
-          const { error: errorRpcNew } = await supabase.rpc('sincronizar_capacidade_lote', { 
-            p_lote_id: data.id, 
-            p_nova_capacidade: capacidadeNum 
-          });
-          if (errorRpcNew) throw errorRpcNew;
+          await supabase.rpc('sincronizar_capacidade_lote', { p_lote_id: data.id, p_nova_capacidade: capacidadeNum });
         }
       }
-
       fecharModais();
       carregarLotes(quadraSelecionada);
     } catch (err) {
@@ -266,7 +266,7 @@ export default function Quadras() {
             </select>
             
             <label style={{ fontSize: "12px", color: "#666", marginTop: 10 }}>Capacidade de Vagas (Gavetas)</label>
-            <input type="number" value={novoLote.capacidade} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} />
+            <input type="number" value={novoLote.capacity} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} />
             
             <div className="modal-row-buttons" style={{ marginTop: 20 }}>
               <button onClick={fecharModais} className="btn-cancel">Cancelar</button>
@@ -277,7 +277,6 @@ export default function Quadras() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

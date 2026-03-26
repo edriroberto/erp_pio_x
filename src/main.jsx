@@ -9,4 +9,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
+import { registerSW } from 'virtual:pwa-register'
+
+// Isso registra o Service Worker para funcionar offline
+registerSW({ immediate: true })
 
