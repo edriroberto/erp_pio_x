@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, WifiOff } from "lucide-react"; // Adicionado ícone de offline
 
 // Hooks Customizados
 import { useSepultamentos } from "../Hooks/useSepultamentos";
@@ -22,19 +22,45 @@ export default function Sepultamentos() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  // Destruturando nosso Hook focado em lógica de dados
   const { dados, loading, carregar, excluir } = useSepultamentos();
   
   const [selecionado, setSelecionado] = useState(null);
   const [filtro, setFiltro] = useState("");
+  const [isOffline, setIsOffline] = useState(!navigator.onLine); // Estado de conexão
 
-  // Carrega os dados ao montar o componente
+  // Monitorar status da internet
   useEffect(() => {
-    carregar();
+    const handleStatus = () => setIsOffline(!navigator.onLine);
+    window.addEventListener("online", handleStatus);
+    window.addEventListener("offline", handleStatus);
+    return () => {
+      window.removeEventListener("online", handleStatus);
+      window.removeEventListener("offline", handleStatus);
+    };
+  }, []);
+
+  // Carrega os dados e gerencia o cache do PWA
+  useEffect(() => {
+    const carregarComCache = async () => {
+      await carregar();
+    };
+    carregarComCache();
   }, [carregar]);
 
+  // Lógica de Persistência: Sempre que 'dados' atualizar via rede, salvamos no cache
+  useEffect(() => {
+    if (dados && dados.length > 0) {
+      localStorage.setItem("cache_sepultamentos", JSON.stringify(dados));
+    }
+  }, [dados]);
+
+  // Dados Finais: Se estiver carregando e não houver dados, tentamos ler o cache imediatamente
+  const dadosExibicao = (dados.length === 0 && !loading) 
+    ? JSON.parse(localStorage.getItem("cache_sepultamentos") || "[]")
+    : dados;
+
   // Filtro local (Busca rápida em memória)
-  const dadosFiltrados = dados.filter(s => {
+  const dadosFiltrados = dadosExibicao.filter(s => {
     if (!filtro) return true;
     const t = filtro.toLowerCase();
     return (
@@ -54,6 +80,7 @@ export default function Sepultamentos() {
   };
 
   const handleExcluir = async () => {
+    if (isOffline) return alert("Não é possível excluir registros sem conexão com a internet.");
     if (!selecionado) return alert("Selecione um registro.");
     
     const confirmou = window.confirm(`Excluir definitivamente ${selecionado.nome}?`);
@@ -64,7 +91,6 @@ export default function Sepultamentos() {
     if (res.success) {
       alert("Registro excluído!");
       setSelecionado(null);
-      // Não precisa chamar carregar() de novo, o hook já removeu do estado local!
     } else {
       alert("Erro ao excluir: " + res.error);
     }
@@ -72,6 +98,17 @@ export default function Sepultamentos() {
 
   return (
     <ContainerPagina>
+      {/* AVISO DE MODO OFFLINE */}
+      {isOffline && (
+        <div style={{
+          background: "#feebc8", color: "#c05621", padding: "8px 15px", 
+          borderRadius: "8px", marginBottom: "15px", display: "flex", 
+          alignItems: "center", gap: "10px", fontSize: "14px", fontWeight: "bold"
+        }}>
+          <WifiOff size={18} /> Modo Offline: Exibindo dados salvos localmente.
+        </div>
+      )}
+
       {/* HEADER DINÂMICO */}
       <div style={{
         display: "flex",
@@ -106,9 +143,9 @@ export default function Sepultamentos() {
       </div>
 
       <ContainerTabela>
-        {loading && <p style={{ padding: 20 }}>Carregando...</p>}
+        {loading && dadosExibicao.length === 0 && <p style={{ padding: 20 }}>Carregando...</p>}
         
-        {!loading && isMobile ? (
+        {(!loading || dadosExibicao.length > 0) && isMobile ? (
           <SepultamentoList
             dados={dadosFiltrados}
             selecionado={selecionado}
