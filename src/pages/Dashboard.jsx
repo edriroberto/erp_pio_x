@@ -3,24 +3,14 @@ import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, WifiOff } from "lucide-react"; 
 
-// Importando as funções utilitárias
 import { formatarData, calcularIdade } from "../utils/formatarData";
-
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
 
 import DashboardCard from "../components/DashboardCard";
 import SepultamentoCard from "../components/SepultamentoCard";
 import ContainerTabela from "../components/ContainerTabela";
-import ContainerPagina from "../components/ContainerPagina";
 import "../styles/tabela.css";
 
 export default function Dashboard() {
@@ -29,21 +19,22 @@ export default function Dashboard() {
   const [ultimos, setUltimos] = useState([]);
   const [selecionado, setSelecionado] = useState(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [totais, setTotais] = useState({
-    sepultamentos: 0,
-    falecimentos: 0,
-    pendentes: 0
-  });
+  const [totais, setTotais] = useState({ sepultamentos: 0, falecimentos: 0, pendentes: 0 });
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  const CORES = [
-    "#4a90e2", "#f5a623", "#f35d22", "#50e3c2",
-    "#34a853", "#ea4335", "#fbbc05", "#607d8b",
-    "#9c27b0", "#ff6b6b", "#00bcd4", "#795548"
-  ];
+  const CORES = ["#4a90e2", "#f5a623", "#f35d22", "#50e3c2", "#34a853", "#ea4335"];
 
-  // Monitorar Redimensionamento e Conexão
   useEffect(() => {
+    // 1. Carregar cache local imediatamente (Sincronia)
+    const cacheSalvo = localStorage.getItem("cache_ultimos_sepultamentos");
+    if (cacheSalvo) {
+      setUltimos(JSON.parse(cacheSalvo));
+    }
+
+    // 2. Tentar carregar dados atualizados da rede
+    carregarDashboard();
+
+    // 3. Listeners de sistema
     const resize = () => setIsMobile(window.innerWidth <= 768);
     const handleStatus = () => setIsOffline(!navigator.onLine);
     
@@ -51,8 +42,6 @@ export default function Dashboard() {
     window.addEventListener("online", handleStatus);
     window.addEventListener("offline", handleStatus);
     
-    carregarDashboard();
-
     return () => {
       window.removeEventListener("resize", resize);
       window.removeEventListener("online", handleStatus);
@@ -60,173 +49,101 @@ export default function Dashboard() {
     };
   }, []);
 
-  function abrirCadastro(id) {
-    navigate(`/cadastroSepultamento/${id}`);
-  }
-
-  const formatChave = (ano, mes) => `${ano}-${String(mes).padStart(2, "0")}`;
-
   async function carregarDashboard() {
     try {
+      // Carregamos os dados em paralelo para velocidade
       const [g, s, f, p, l] = await Promise.all([
         supabase.from("vw_dash_sepultamentos_12_meses").select("*"),
         supabase.from("vw_dash_sepultamentos_mes").select("total").single(),
         supabase.from("vw_dash_falecimentos_mes").select("total").single(),
         supabase.from("vw_dash_obitos_pendentes").select("total").single(),
-        supabase
-          .from("vw_sepultamentos_v1")
-          .select("*")
-          .order("data_falecimento", { ascending: false })
-          .limit(15)
+        supabase.from("vw_sepultamentos_v1").select("*").order("data_falecimento", { ascending: false }).limit(15)
       ]);
 
-      // Processamento do Gráfico...
-      const meses12 = [];
-      const hoje = new Date();
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-        const chave = formatChave(d.getFullYear(), d.getMonth() + 1);
-        meses12.push({
-          chave,
-          mes: `${d.toLocaleDateString("pt-BR", { month: "short" })}/${d.getFullYear()}`,
-          total: 0
-        });
+      if (l.data) {
+        setUltimos(l.data);
+        // Atualiza o cache apenas com a lista de sepultamentos
+        localStorage.setItem("cache_ultimos_sepultamentos", JSON.stringify(l.data));
       }
 
-      if (g.data) {
-        g.data.forEach(item => {
-          const [ano, mes] = item.mes.split("-");
-          const chave = formatChave(ano, mes);
-          const index = meses12.findIndex(m => m.chave === chave);
-          if (index !== -1) meses12[index].total = item.total;
-        });
-      }
-
-      const dadosComCor = meses12.map((m, idx) => ({
-        ...m,
-        cor: CORES[idx % CORES.length]
-      }));
-
-      const novosTotais = {
+      if (s.data) setTotais({
         sepultamentos: s.data?.total || 0,
         falecimentos: f.data?.total || 0,
         pendentes: p.data?.total || 0
-      };
+      });
 
-      // ATUALIZA ESTADOS
-      setGrafico(dadosComCor);
-      setTotais(novosTotais);
-      setUltimos(l.data || []);
-
-      // PERSISTÊNCIA PWA: Salva o "Snapshot" do Dashboard
-      const snapshot = {
-        grafico: dadosComCor,
-        totais: novosTotais,
-        ultimos: l.data || [],
-        dataHora: new Date().toISOString()
-      };
-      localStorage.setItem("cache_dashboard", JSON.stringify(snapshot));
+      if (g.data) {
+        // Lógica simplificada de processamento do gráfico
+        const processados = g.data.map((item, idx) => ({
+          ...item,
+          mes: item.mes.split('-').reverse().join('/'), // Formata MM-YYYY para YYYY-MM
+          cor: CORES[idx % CORES.length]
+        }));
+        setGrafico(processados);
+      }
 
     } catch (e) {
-      console.warn("Erro ao carregar Dashboard. Tentando carregar cache offline...");
-      const cache = localStorage.getItem("cache_dashboard");
-      if (cache) {
-        const snapshot = JSON.parse(cache);
-        setGrafico(snapshot.grafico);
-        setTotais(snapshot.totais);
-        setUltimos(snapshot.ultimos);
-      }
+      console.error("Modo Offline: Mantendo dados do cache.");
     }
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        padding: isMobile ? 12 : 20,
-        background: "#f5f6fa",
-        fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto',
-        margin: '0px -10px 0px -10px'
-      }}
-    >
-      {/* BANNER OFFLINE */}
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100%",
+      padding: isMobile ? 12 : 20, background: "#f5f6fa",
+      fontFamily: 'sans-serif', margin: '0 -10px'
+    }}>
+      
       {isOffline && (
         <div style={{
-          background: "#feebc8", color: "#c05621", padding: "8px 15px", 
-          borderRadius: "10px", marginBottom: "12px", display: "flex", 
-          alignItems: "center", gap: "10px", fontSize: "13px", fontWeight: "600",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+          background: "#fff5f5", color: "#c53030", padding: "10px", 
+          borderRadius: "8px", marginBottom: "15px", display: "flex", 
+          alignItems: "center", gap: "10px", fontSize: "14px", border: "1px solid #feb2b2"
         }}>
-          <WifiOff size={16} /> Dashboard Offline (Dados de sua última conexão)
+          <WifiOff size={18} /> 
+          <strong>Você está offline.</strong> Exibindo lista salva no celular.
         </div>
       )}
 
-      <h2 style={{ 
-        marginBottom: "16px", 
-        fontSize: isMobile ? "20px" : "24px", 
-        color: "#1a202c" ,
-        marginTop: isOffline ? "0px" : "-20px"
-      }}>
+      <h2 style={{ marginBottom: "16px", color: "#1a202c", marginTop: isOffline ? 0 : "-15px" }}>
         Dashboard
       </h2>
 
-      {/* KPIs */}
-      <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3,1fr)",
-          gap: 8,
-          marginBottom: 16,
-      }}>
+      {/* KPIs - Só aparecem valores se houver sinal ou se o estado foi populado */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 16 }}>
         <DashboardCard titulo="Sepultamentos" valor={totais.sepultamentos} cor="#4a90e2" />
         <DashboardCard titulo="Falecimentos" valor={totais.falecimentos} cor="#34a853" />
         <DashboardCard titulo="Pendentes" valor={totais.pendentes} cor="#ea4335" />
       </div>
 
-      <div style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          paddingRight: 4,
-          margin: '0 -20px 0 -15px'
-      }}>
+      <div style={{ flex: 1, overflowY: "auto", paddingRight: 4, margin: '0 -20px 0 -15px' }}>
         
-        {/* Gráfico */}
-        <div style={{
-            background: "#fff",
-            borderRadius: 14,
-            padding: 12,
-            marginBottom: 16,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
-        }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
-            Sepultamentos últimos 12 meses
+        {/* Gráfico - Só renderiza se houver dados */}
+        {grafico.length > 0 && (
+          <div style={{ background: "#fff", borderRadius: 14, padding: 12, marginBottom: 16, boxShadow: "0 2px 6px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Histórico 12 Meses</div>
+            <div style={{ height: isMobile ? 140 : 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={grafico}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="mes" fontSize={10} />
+                  <YAxis fontSize={10} />
+                  <Tooltip />
+                  <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                    {grafico.map((entry, index) => <Cell key={index} fill={entry.cor} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
+        )}
 
-          <div style={{ height: isMobile ? 140 : 250 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={grafico}
-                margin={{ top: 5, right: 20, left: -25, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="mes" fontSize={10} />
-                <YAxis fontSize={10} />
-                <Tooltip />
-                <Bar dataKey="total" radius={[6, 6, 0, 0]}>
-                  {grafico.map((entry, index) => (
-                    <Cell key={index} fill={entry.cor} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* LISTA DE ÚLTIMOS SEPULTAMENTOS */}
+        {/* LISTA DE ÚLTIMOS SEPULTAMENTOS - Prioridade Máxima */}
         <div style={{ padding: "0 15px" }}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Últimos Sepultamentos</div>
+          <div style={{ fontWeight: 600, marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+            <span>Últimos Sepultamentos</span>
+            {ultimos.length > 0 && <span style={{ fontSize: 10, color: '#999' }}>{ultimos.length} registros</span>}
+          </div>
 
           {isMobile ? (
             ultimos.map(s => (
@@ -238,11 +155,7 @@ export default function Dashboard() {
                   falecimento: formatarData(s.data_falecimento),
                   idade: calcularIdade(s.data_nascimento, s.data_falecimento)
                 }}
-                selecionado={selecionado?.id === s.id}
-                onClick={() => {
-                  setSelecionado(s);
-                  abrirCadastro(s.id);
-                }}
+                onClick={() => navigate(`/cadastroSepultamento/${s.id}`)}
               />
             ))
           ) : (
@@ -252,55 +165,21 @@ export default function Dashboard() {
                   <tr>
                     <th>Nome</th>
                     <th>Quadra</th>
-                    <th style={{ textAlign: 'center' }}>Lote</th>
-                    <th style={{ textAlign: 'center' }}>Gaveta</th>
-                    <th>Nascimento</th>
+                    <th>Lote</th>
                     <th>Falecimento</th>
-                    <th style={{ textAlign: 'center' }}>Idade</th>
                     <th>Funerária</th>
-                    <th>Observações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {ultimos.map((s) => {
-                    const selecionadoLinha = selecionado?.id === s.id;
-                    const pendenciaObito = s.obito_entregue === false;
-                    
-                    let corFundo = selecionadoLinha ? "#ebf8ff" : (pendenciaObito ? "#fff5f5" : "transparent");
-
-                    return (
-                      <tr
-                        key={s.id}
-                        onClick={() => setSelecionado(s)}
-                        onDoubleClick={() => abrirCadastro(s.id)}
-                        style={{
-                          cursor: "pointer",
-                          backgroundColor: corFundo,
-                          color: selecionadoLinha ? "#2b6cb0" : (pendenciaObito ? "#c53030" : "inherit"),
-                          fontWeight: selecionadoLinha ? "600" : "400",
-                          transition: "background-color .2s"
-                        }}
-                        className="linha-tabela"
-                      >
-                        <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          {pendenciaObito && <AlertCircle size={14} color="#e53e3e" strokeWidth={2.5} />}
-                          {s.nome}
-                        </td>
-                        <td>{s.quadra}</td>
-                        <td style={{ textAlign: 'center' }}>{s.lote}</td>
-                        <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
-                        <td>{formatarData(s.data_nascimento)}</td>
-                        <td>{formatarData(s.data_falecimento)}</td>
-                        <td style={{ textAlign: 'center' }}>
-                          {calcularIdade(s.data_nascimento, s.data_falecimento)}
-                        </td>
-                        <td>{s.funeraria}</td>
-                        <td style={{ fontSize: 11, color: pendenciaObito ? "#c53030" : "#666" }}>
-                          {s.observacoes}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {ultimos.map((s) => (
+                    <tr key={s.id} onClick={() => navigate(`/cadastroSepultamento/${s.id}`)} style={{ cursor: 'pointer' }}>
+                      <td style={{ fontWeight: '500' }}>{s.nome}</td>
+                      <td>{s.quadra}</td>
+                      <td>{s.lote}</td>
+                      <td>{formatarData(s.data_falecimento)}</td>
+                      <td>{s.funeraria}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </ContainerTabela>
