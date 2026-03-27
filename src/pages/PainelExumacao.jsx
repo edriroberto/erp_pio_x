@@ -75,11 +75,20 @@ const [dadosExumacao, setDadosExumacao] = useState({
       if (error) throw error;
 
       // Tratamento preventivo para evitar o ?-?
-      const dadosTratados = (data || []).map(item => ({
-        ...item,
-        quadra_exibir: item.quadra || item.quadra_nome || "?",
-        lote_exibir: item.lote || item.lote_nome || item.numero || "?"
-      }));
+      // Tratamento preventivo para remover o "?" e focar na informação real
+const dadosTratados = (data || []).map(item => {
+  // Se não tiver quadra, tenta pegar o tipo do lote ou apenas "S/Q" (Sem Quadra)
+  const q = item.quadra || item.quadra_nome || "N/D";
+  const l = item.lote || item.lote_nome || item.numero || "N/D";
+  
+  return {
+    ...item,
+    quadra_exibir: q,
+    lote_exibir: l,
+    // Cria uma string de localização mais curta para o card
+    local_curto: `${q} • ${l}`
+  };
+});
 
       setLista(dadosTratados);
     } catch (error) {
@@ -331,32 +340,63 @@ async function confirmarLiberacao() {
 }
 
 const styles = {
-  headerContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' },
-  titulo: { color: "#2d3748", margin: 0 },
+
+  titulo: { 
+    color: "#2d3748", 
+    margin: '-10px 0 -10px 0', 
+    fontSize: '18px' // Título menor para não empurrar tudo para baixo
+  },
+  
+  select: {
+    flex: "1",
+    minWidth: "120px", 
+    padding: "8px", // Padding menor
+    borderRadius: "6px",
+    border: "1px solid #cbd5e0",
+    fontSize: '13px', // Fonte levemente menor para caber mais texto
+    background: "#ffffff",
+    color: "#2d3748",
+    appearance: "none",      // Remove o estilo "glass" do iOS se quiser algo mais plano
+    WebkitAppearance: "none",
+    colorScheme: "light",    // Diz ao iOS que este elemento é sempre "claro"
+    
+  },
+
+  gridCards: { 
+    display: "grid", 
+    gridTemplateColumns: "1fr", 
+    gap: "5px", // Menor espaço entre os cards
+    padding: "0" 
+  },
+  // ... restante dos estilos
+
+  headerContainer: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: '0px', 
+    marginTop: '-10px', 
+    flexWrap: 'wrap', 
+    gap: '10px' 
+  },
+
   switchContainer: { display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" },
   switchTrack: { width: "34px", height: "18px", borderRadius: "15px", position: "relative", transition: '0.3s' },
   switchThumb: { width: "14px", height: "14px", background: "white", borderRadius: "50%", position: "absolute", top: "2px", transition: "0.3s" },
   switchLabel: { fontSize: "12px", fontWeight: "bold", color: "#4a5568" },
-  filtrosRow: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e0', background: '#ffffff', display: 'flex', gap: "10px", marginBottom: "20px", marginTop: "-10px", flexWrap: 'wrap' },
-  select: {
-    flex: "1",
-    minWidth: "150px", // Ajustado para caber melhor lado a lado no iPhone
-    maxWidth: "300px",
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #cbd5e0",
-    fontSize: '14px',
-    background: "#ffffff", // Força o fundo branco
-    color: "#2d3748",      // Força o texto cinza escuro/preto
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-    
-    // Adicione estas 3 linhas para o iPhone:
-    appearance: "none",      // Remove o estilo "glass" do iOS se quiser algo mais plano
-    WebkitAppearance: "none",
-    colorScheme: "light",    // Diz ao iOS que este elemento é sempre "claro"
+  filtrosRow: { 
+    padding: '10px', 
+    borderRadius: '6px', 
+    border: '1px solid #cbd5e0', 
+    background: '#ffffff', 
+    display: 'flex', 
+    gap: "10px", 
+    marginBottom: "-5px", 
+    marginTop: "-10px", 
+    flexWrap: 'wrap' 
   },
-  
-  gridCards: { display: "grid", gridTemplateColumns: "1fr", gap: "12px", padding: "4px" },
+
+
   statusBadge: { padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "bold" },
   btnTabela: { background: "#1a202c", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontSize: "11px", fontWeight: "bold" },
   textoCentro: { textAlign: "center", padding: "40px", color: "#718096" },

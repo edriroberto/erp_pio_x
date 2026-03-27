@@ -1,38 +1,79 @@
+/* Estilos Globais da Tabela */
 .tabela {
-  width: max-content;
-  min-width: 100%;
+  width: 100%; /* Mudado de max-content para 100% para evitar overflow lateral desnecessário */
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 14px;
-  table-layout: fixed;
+  font-size: 13px; /* Reduzido levemente para ganhar espaço */
+  table-layout: auto; /* Deixe o navegador ajustar as colunas conforme o conteúdo */
 }
 
 .tabela td,
 .tabela th {
-  padding: 4px 10px;
-  border-bottom: 1px solid #eee;
+  padding: 8px 10px; /* Padding mais equilibrado */
+  border-bottom: 1px solid #f0f0f0;
   background-color: white;
   white-space: nowrap;
+  color: #4a5568;
+}
+
+.tabela th {
+  color: #718096;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
 /* HEADER FIXO */
 .tabela thead th {
   position: sticky;
   top: 0;
-  background: white;
+  background: #f8fafc; /* Fundo levemente cinza para destacar o topo */
   z-index: 3;
-  box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* PRIMEIRA COLUNA FIXA */
+/* PRIMEIRA COLUNA FIXA (Status/Ação) */
 .tabela th:first-child,
 .tabela td:first-child {
   position: sticky;
   left: 0;
   background: white;
   z-index: 2;
+  border-right: 1px solid #edf2f7; /* Linha sutil para separar a coluna fixa */
 }
 
+/* Ajuste de Z-Index para o encontro do Header com a Coluna Fixa */
 .tabela thead th:first-child {
   z-index: 4;
+  background: #f8fafc;
+}
+
+/* --- OTIMIZAÇÃO PARA FOCO NOS CARDS (MOBILE) --- */
+@media (max-width: 768px) {
+  /* Esconde a tabela no mobile se você estiver usando os Cards */
+  /* Se você quiser manter a tabela funcional no mobile, use as regras abaixo: */
+  
+  .tabela {
+    font-size: 12px;
+  }
+
+  .tabela td, .tabela th {
+    padding: 6px 8px; /* Mais compacto no iPhone */
+  }
+
+  /* Reduz o impacto da coluna fixa no mobile para sobrar espaço pro nome */
+  .tabela td:first-child {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Efeito de Hover nas linhas (Desktop) */
+@media (min-width: 769px) {
+  .tabela tbody tr:hover td {
+    background-color: #f7fafc;
+    cursor: default;
+  }
 }
