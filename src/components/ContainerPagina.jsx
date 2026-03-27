@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 export default function ContainerPagina({ titulo, children }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // Escuta o redimensionamento da tela (importante se o usuário girar o celular)
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
@@ -14,34 +13,41 @@ export default function ContainerPagina({ titulo, children }) {
     <div
       style={{
         width: "100%",
-        maxWidth: "100vw", // Evita scroll lateral acidental
         minHeight: "100vh",
-        background: "#f2f2f7", // Tom cinza padrão iOS
+        background: "#f2f2f7",
         
-        // No mobile, usamos um padding menor para os cards encostarem mais na borda
-        padding: isMobile ? "8px 10px" : "20px", 
+        // Zera o padding no mobile para ocupar a largura toda
+        padding: isMobile ? "0" : "20px", 
         
         display: "flex",
         flexDirection: "column",
-        gap: isMobile ? "10px" : "16px", // Espaço entre os elementos (Header, Filtros, Cards)
+        
+        // Mantém o espaço entre os elementos internos (Título, Filtros, Cards)
+        // No mobile, adicionamos um pequeno gap para não colarem um no outro verticalmente
+        gap: isMobile ? "8px" : "16px", 
         
         boxSizing: "border-box",
-        overflowX: "hidden", // Garante que nada "escape" para os lados
-        margin: "0 auto",    // Centraliza o container sem margens negativas
+        margin: "0",
+        overflowX: "hidden",
       }}
     >
+      {/* O título e os filtros precisam de um respiro nas laterais para não encostarem no vidro */}
       {titulo && (
         <h3 style={{ 
-          margin: 0, 
+          margin: isMobile ? "15px 15px 5px 15px" : "0", 
           fontSize: isMobile ? "1.2rem" : "1.5rem",
-          color: "#1c1c1e",
-          paddingLeft: isMobile ? "4px" : "0" 
+          color: "#1c1c1e"
         }}>
           {titulo}
         </h3>
       )}
 
-      {children}
+      {/* DICA: Se você quer que os CARDS ocupem a largura toda, 
+         os filhos (children) serão renderizados aqui sem padding lateral.
+      */}
+      <div style={{ width: "100%" }}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -374,7 +374,7 @@ const styles = {
     display: 'flex', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginBottom: '0px', 
+    marginBottom: '5px', 
     marginTop: '-10px', 
     flexWrap: 'wrap', 
     gap: '10px' 
@@ -391,8 +391,8 @@ const styles = {
     background: '#ffffff', 
     display: 'flex', 
     gap: "10px", 
-    marginBottom: "-5px", 
-    marginTop: "-10px", 
+    marginBottom: "0px", 
+    marginTop: "0px", 
     flexWrap: 'wrap' 
   },
 
