@@ -365,7 +365,7 @@ const styles = {
   gridCards: { 
     display: "grid", 
     gridTemplateColumns: "1fr", 
-    gap: "5px", // Menor espaço entre os cards
+    gap: "2px", // Menor espaço entre os cards
     padding: "0" 
   },
   // ... restante dos estilos
@@ -375,7 +375,7 @@ const styles = {
     justifyContent: 'space-between', 
     alignItems: 'center', 
     marginBottom: '5px', 
-    marginTop: '-10px', 
+    marginTop: '5px', 
     flexWrap: 'wrap', 
     gap: '10px' 
   },
@@ -391,7 +391,7 @@ const styles = {
     background: '#ffffff', 
     display: 'flex', 
     gap: "10px", 
-    marginBottom: "0px", 
+    marginBottom: "10px", 
     marginTop: "0px", 
     flexWrap: 'wrap' 
   },
