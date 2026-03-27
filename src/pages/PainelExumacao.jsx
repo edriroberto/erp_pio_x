@@ -267,6 +267,17 @@ async function confirmarLiberacao() {
             </p>
 
             <div style={styles.formGroup}>
+              
+              <div style={styles.inputWrapper}>
+                <label style={styles.label}>Data do Procedimento</label>
+                <input 
+                  type="date" 
+                  style={styles.input}
+                  value={dadosExumacao.data_procedimento}
+                  onChange={(e) => setDadosExumacao({...dadosExumacao, data_procedimento: e.target.value})}
+                />
+              </div>
+
               <div style={styles.inputWrapper}>
                 <label style={styles.label}>Destino dos Restos Mortais</label>
                 <select 
@@ -278,17 +289,8 @@ async function confirmarLiberacao() {
                   <option value="Retirado pela Família">Retirado pela Família</option>
                   <option value="Transferência de Cemitério">Transferência de Cemitério</option>
                   <option value="Cremação">Cremação</option>
+                  <option value="Outros">Outors...</option>
                 </select>
-              </div>
-
-              <div style={styles.inputWrapper}>
-                <label style={styles.label}>Data do Procedimento</label>
-                <input 
-                  type="date" 
-                  style={styles.input}
-                  value={dadosExumacao.data_procedimento}
-                  onChange={(e) => setDadosExumacao({...dadosExumacao, data_procedimento: e.target.value})}
-                />
               </div>
 
               <div style={styles.inputWrapper}>
@@ -336,7 +338,24 @@ const styles = {
   switchThumb: { width: "14px", height: "14px", background: "white", borderRadius: "50%", position: "absolute", top: "2px", transition: "0.3s" },
   switchLabel: { fontSize: "12px", fontWeight: "bold", color: "#4a5568" },
   filtrosRow: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e0', background: '#ffffff', display: 'flex', gap: "10px", marginBottom: "20px", marginTop: "-10px", flexWrap: 'wrap' },
-  select: { flex: "1", minWidth: "180px", maxWidth: "300px", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e0", fontSize: '14px', background: "#fff", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" },
+  select: {
+    flex: "1",
+    minWidth: "150px", // Ajustado para caber melhor lado a lado no iPhone
+    maxWidth: "300px",
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #cbd5e0",
+    fontSize: '14px',
+    background: "#ffffff", // Força o fundo branco
+    color: "#2d3748",      // Força o texto cinza escuro/preto
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+    
+    // Adicione estas 3 linhas para o iPhone:
+    appearance: "none",      // Remove o estilo "glass" do iOS se quiser algo mais plano
+    WebkitAppearance: "none",
+    colorScheme: "light",    // Diz ao iOS que este elemento é sempre "claro"
+  },
+  
   gridCards: { display: "grid", gridTemplateColumns: "1fr", gap: "12px", padding: "4px" },
   statusBadge: { padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "bold" },
   btnTabela: { background: "#1a202c", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer", fontSize: "11px", fontWeight: "bold" },
