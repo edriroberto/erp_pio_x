@@ -6,6 +6,10 @@ export default function ContainerPagina({ titulo, children }) {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
+    // Ajuste global para o corpo da página não ficar branco no Android
+    document.body.style.backgroundColor = "#f2f2f7";
+    document.body.style.margin = "0";
+    
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -13,28 +17,24 @@ export default function ContainerPagina({ titulo, children }) {
     <div
       style={{
         width: "100%",
-        minHeight: "100vh",
+        // dvh (Dynamic VH) resolve o problema da barra de navegação no Android
+        minHeight: "100dvh", 
+        // Fallback para navegadores que não suportam dvh
+        "@supports not (height: 100dvh)": {
+          minHeight: "100vh",
+        },
         background: "#f2f2f7",
-        
-        // Zera o padding no mobile para ocupar a largura toda
-        padding: isMobile ? "0" : "20px", 
-        
+        padding: isMobile ? "0 0 20px 0" : "20px", // Padding inferior para o último card não colar na barra
         display: "flex",
         flexDirection: "column",
-        
-        // Mantém o espaço entre os elementos internos (Título, Filtros, Cards)
-        // No mobile, adicionamos um pequeno gap para não colarem um no outro verticalmente
-        gap: isMobile ? "8px" : "16px", 
-        
+        gap: isMobile ? "0" : "16px",
         boxSizing: "border-box",
         margin: "0",
-        overflowX: "hidden",
       }}
     >
-      {/* O título e os filtros precisam de um respiro nas laterais para não encostarem no vidro */}
       {titulo && (
         <h3 style={{ 
-          margin: isMobile ? "15px 15px 5px 15px" : "0", 
+          margin: isMobile ? "15px 15px 10px 15px" : "0", 
           fontSize: isMobile ? "1.2rem" : "1.5rem",
           color: "#1c1c1e"
         }}>
@@ -42,10 +42,13 @@ export default function ContainerPagina({ titulo, children }) {
         </h3>
       )}
 
-      {/* DICA: Se você quer que os CARDS ocupem a largura toda, 
-         os filhos (children) serão renderizados aqui sem padding lateral.
-      */}
-      <div style={{ width: "100%" }}>
+      {/* Wrapper para os cards */}
+      <div style={{ 
+        width: "100%", 
+        flex: 1, // Faz esse div "empurrar" o fundo até o fim da tela
+        display: "flex", 
+        flexDirection: "column" 
+      }}>
         {children}
       </div>
     </div>
