@@ -154,6 +154,14 @@ export default function SepultamentosPeriodo() {
         </div>
       </div>
 
+<div style={{
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+  maxHeight: '400px'
+}}>
+
       <ContainerTabela>
         {isMobile ? (
           <div style={{ paddingBottom: "80px" }}>
@@ -205,6 +213,7 @@ export default function SepultamentosPeriodo() {
           </table>
         )}
       </ContainerTabela>
+</div>
     </ContainerPagina>
   );
 }

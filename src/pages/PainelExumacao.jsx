@@ -207,7 +207,15 @@ async function confirmarLiberacao() {
       </div>
 
       {/* CONTEÚDO */}
-      <ContainerTabela>
+
+<div style={{
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+  maxHeight: '400px'
+}}>
+  <ContainerTabela>
         {loading ? (
           <div style={styles.textoCentro}>Processando...</div>
         ) : lista.length === 0 ? (
@@ -264,6 +272,7 @@ async function confirmarLiberacao() {
           </table>
         )}
       </ContainerTabela>
+      </div>
 
       {/* MODAL */}
       {modalAberto && (

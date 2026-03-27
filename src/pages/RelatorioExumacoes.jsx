@@ -101,6 +101,13 @@ export default function RelatorioExumacoes() {
           )}
         </div>
       </div>
+<div style={{
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+  maxHeight: '400px'
+}}>
 
       <ContainerTabela>
         {loading ? (
@@ -167,6 +174,7 @@ export default function RelatorioExumacoes() {
           </table>
         )}
       </ContainerTabela>
+        </div>
     </ContainerPagina>
   );
 }

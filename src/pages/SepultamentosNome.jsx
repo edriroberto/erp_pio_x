@@ -124,6 +124,13 @@ export default function SepultamentosPorNome() {
           {dados.length} registros
         </div>
       </div>
+<div style={{
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+  maxHeight: '400px'
+}}>
 
       <ContainerTabela>
         {isMobile ? (
@@ -188,6 +195,7 @@ export default function SepultamentosPorNome() {
           </table>
         )}
       </ContainerTabela>
+ </div>
     </ContainerPagina>
   );
 }

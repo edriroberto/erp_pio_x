@@ -141,8 +141,16 @@ export default function Sepultamentos() {
           fixa={isMobile}
         />
       </div>
+<div style={{
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+  maxHeight: '450px'
+}}>
 
       <ContainerTabela>
+   
         {loading && dadosExibicao.length === 0 && <p style={{ padding: 20 }}>Carregando...</p>}
         
         {(!loading || dadosExibicao.length > 0) && isMobile ? (
@@ -211,6 +219,7 @@ export default function Sepultamentos() {
           </table>
         )}
       </ContainerTabela>
+</div>
     </ContainerPagina>
   );
 }
