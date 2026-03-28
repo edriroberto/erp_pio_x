@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "../styles/tabela.css";
 
 export default function ContainerPagina({ titulo, children }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -23,7 +24,8 @@ export default function ContainerPagina({ titulo, children }) {
         "@supports not (height: 100dvh)": {
           minHeight: "100vh",
         },
-        background: "#f2f2f7",
+        background: "var(--jardim-secundaria)",
+        //        background: "#f2f2f7",
         padding: isMobile ? "0 0 20px 0" : "20px", // Padding inferior para o último card não colar na barra
         display: "flex",
         flexDirection: "column",

@@ -1,3 +1,14 @@
+
+:root {
+  /* Paleta Jardim Profissional */
+  --jardim-primaria: #2d5a27;    /* Verde Musgo Profundo (Botões e Destaques) */
+  --jardim-secundaria: #ebf2ea;  /* Verde Menta Claríssimo (Fundo de Tela) */
+  --jardim-acento: #8ca67a;      /* Verde Oliva Suave (Detalhes e Bordas) */
+  --jardim-texto: #1a2421;       /* Grafite Floresta (Textos principais) */
+  --jardim-pedra: #ffffff;       /* Branco Mármore (Cards e Inputs) */
+  --jardim-alerta: #d97706;      /* Terracota/Âmbar (Para avisos e atenção) */
+  --jardim-pronto: #15803d;      /* Verde Grama (Para o que está liberado) */
+}
 /* Estilos Globais da Tabela */
 .tabela {
   width: 100%; /* Mudado de max-content para 100% para evitar overflow lateral desnecessário */

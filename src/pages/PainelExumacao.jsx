@@ -356,20 +356,19 @@ const styles = {
     fontSize: '18px' // Título menor para não empurrar tudo para baixo
   },
   
-  select: {
-    flex: "1",
-    minWidth: "120px", 
-    padding: "8px", // Padding menor
-    borderRadius: "6px",
-    border: "1px solid #cbd5e0",
-    fontSize: '13px', // Fonte levemente menor para caber mais texto
-    background: "#ffffff",
-    color: "#2d3748",
-    appearance: "none",      // Remove o estilo "glass" do iOS se quiser algo mais plano
-    WebkitAppearance: "none",
-    colorScheme: "light",    // Diz ao iOS que este elemento é sempre "claro"
-    
-  },
+  // No PainelExumacao, atualize o styles.select:
+select: {
+  flex: "1",
+  padding: "12px",
+  borderRadius: "10px",
+  border: "1px solid var(--jardim-acento)", // Borda oliva suave
+  fontSize: '14px',
+  background: "var(--jardim-pedra)",
+  color: "var(--jardim-texto)",
+  boxShadow: "0 2px 4px rgba(45, 90, 39, 0.05)", // Sombra levemente esverdeada
+  WebkitAppearance: "none",
+  colorScheme: "light",
+},
 
   gridCards: { 
     display: "grid", 
