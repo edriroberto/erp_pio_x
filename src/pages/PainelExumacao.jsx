@@ -76,7 +76,7 @@ const [dadosExumacao, setDadosExumacao] = useState({
 
       // Tratamento preventivo para evitar o ?-?
       // Tratamento preventivo para remover o "?" e focar na informação real
-const dadosTratados = (data || []).map(item => {
+  const dadosTratados = (data || []).map(item => {
   // Se não tiver quadra, tenta pegar o tipo do lote ou apenas "S/Q" (Sem Quadra)
   const q = item.quadra || item.quadra_nome || "N/D";
   const l = item.lote || item.lote_nome || item.numero || "N/D";
@@ -248,8 +248,10 @@ async function confirmarLiberacao() {
                   <td>
                     <span style={{
                       ...styles.statusBadge,
+                      
                       background: item.alerta_cor === "VERMELHO" ? "#fed7d7" : "#fef3c7",
                       color: item.alerta_cor === "VERMELHO" ? "#c53030" : "#975a16"
+                      
                     }}>
                       {item.alerta_cor === "VERMELHO" ? "PRONTO" : "AVISO"}
                     </span>
