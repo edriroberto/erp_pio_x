@@ -191,8 +191,13 @@ export default function Dashboard() {
                 margin={{ top: 5, right: 20, left: -25, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="mes" />
-                <YAxis />
+                <XAxis 
+                  dataKey="mes" 
+                  tick={{ fontSize: 10 }} // Diminui a fonte do mês (ex: jan/2026)
+                  interval={isMobile ? 2 : 0} />
+                <YAxis
+                  tick={{ fontSize: 10 }} // Diminui a fonte do mês (ex: jan/2026)
+                />
                 <Tooltip />
                 <Bar dataKey="total" radius={[6, 6, 0, 0]}>
                   {grafico.map((entry, index) => (

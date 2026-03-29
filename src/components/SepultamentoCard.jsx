@@ -151,7 +151,7 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}>
-              "{dado.observacoes}"
+              {dado.observacoes}
             </div>
           )}
         </div>
