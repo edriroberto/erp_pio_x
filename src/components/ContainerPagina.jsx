@@ -16,24 +16,18 @@ export default function ContainerPagina({ titulo, children }) {
 
   return (
     <div
-      style={{
-        width: "100%",
-        // dvh (Dynamic VH) resolve o problema da barra de navegação no Android
-        minHeight: "100dvh", 
-        // Fallback para navegadores que não suportam dvh
-        "@supports not (height: 100dvh)": {
-          minHeight: "100vh",
-        },
-        background: "var(--jardim-secundaria)",
-        //        background: "#f2f2f7",
-        padding: isMobile ? "0 0 20px 0" : "20px", // Padding inferior para o último card não colar na barra
-        display: "flex",
-        flexDirection: "column",
-        gap: isMobile ? "0" : "16px",
-        boxSizing: "border-box",
-        margin: "0",
-      }}
-    >
+style={{
+    width: "100%",
+    height: "100dvh", // Mudança de minHeight para height
+    display: "flex",
+    flexDirection: "column",
+    background: "var(--jardim-secundaria)",
+    padding: isMobile ? "0" : "20px", // Removi o padding bottom de 20px que criava espaço
+    boxSizing: "border-box",
+    overflow: "hidden" // Evita que a página inteira role, apenas a tabela/lista deve rolar
+  }}
+  
+  >
       {titulo && (
         <h3 style={{ 
           margin: isMobile ? "15px 15px 10px 15px" : "0", 
@@ -45,13 +39,8 @@ export default function ContainerPagina({ titulo, children }) {
       )}
 
       {/* Wrapper para os cards */}
-      <div style={{ 
-        width: "100%", 
-        flex: 1, // Faz esse div "empurrar" o fundo até o fim da tela
-        display: "flex", 
-        flexDirection: "column" 
-      }}>
-        {children}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    {children}
       </div>
     </div>
   );

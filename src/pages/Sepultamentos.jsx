@@ -151,17 +151,16 @@ export default function Sepultamentos() {
 }}>
 
       <ContainerTabela>
-   
-        {loading && dadosExibicao.length === 0 && <p style={{ padding: 20 }}>Carregando...</p>}
-        
-        {(!loading || dadosExibicao.length > 0) && isMobile ? (
-          <SepultamentoList
-            dados={dadosFiltrados}
-            selecionado={selecionado}
-            onSelecionar={setSelecionado}
-            formatarData={formatarData}
-          />
-        ) : (
+  {loading && dadosExibicao.length === 0 && <p style={{ padding: 20 }}>Carregando...</p>}
+  
+  {(!loading || dadosExibicao.length > 0) && isMobile ? (
+    <SepultamentoList
+      dados={dadosFiltrados}
+      selecionado={selecionado}
+      onSelecionar={setSelecionado}
+      formatarData={formatarData}
+    />
+  ) : (
           <table className="tabela">
             <thead>
               <tr>
