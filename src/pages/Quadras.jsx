@@ -111,28 +111,54 @@ export default function Quadras() {
   const contarPendencias = () => JSON.parse(localStorage.getItem("fila_lotes_offline") || "[]").length;
 
   const handleSincronizar = async () => {
-    const fila = JSON.parse(localStorage.getItem("fila_lotes_offline") || "[]");
-    if (fila.length === 0 || syncing) return;
+  const fila = JSON.parse(localStorage.getItem("fila_lotes_offline") || "[]");
+  if (fila.length === 0 || syncing) return;
 
-    setSyncing(true);
-    const falhas = [];
+  setSyncing(true);
+  const falhas = [];
 
-    for (const item of fila) {
-      try {
-        const { tempId, ...dadosParaEnvio } = item;
-        const { data, error } = await supabase.from("lotes").insert([dadosParaEnvio]).select().single();
-        if (error) throw error;
-        await supabase.rpc('sincronizar_capacidade_lote', { p_lote_id: data.id, p_nova_capacidade: dadosParaEnvio.capacidade_gavetas });
-      } catch (e) {
-        falhas.push(item);
+  for (const item of fila) {
+    try {
+      const { tempId, ...dadosParaEnvio } = item;
+      
+      // Tenta inserir
+      const { data, error } = await supabase
+        .from("lotes")
+        .insert([dadosParaEnvio])
+        .select()
+        .single();
+
+      if (error) {
+        // CÓDIGO 23505: Unique Violation (Lote já existe)
+        if (error.code === '23505') {
+          console.log(`Lote ${dadosParaEnvio.numero} já existe no banco. Descartando pendência local.`);
+          continue; // Pula para o próximo sem adicionar nas falhas (remove da fila)
+        }
+        throw error; // Outros erros (conexão, permissão) caem no catch
       }
-    }
 
-    localStorage.setItem("fila_lotes_offline", JSON.stringify(falhas));
-    atualizarContagemOffline();
-    setSyncing(false);
-    if (falhas.length === 0 && quadraSelecionada) carregarLotes(quadraSelecionada);
-  };
+      // Se inseriu com sucesso, sincroniza as gavetas
+      await supabase.rpc('sincronizar_capacidade_lote', { 
+        p_lote_id: data.id, 
+        p_nova_capacidade: dadosParaEnvio.capacidade_gavetas 
+      });
+
+    } catch (e) {
+      console.error("Erro real na sincronização:", e);
+      falhas.push(item); // Mantém na fila apenas erros de rede ou sistema
+    }
+  }
+
+  // Atualiza o storage: se o lote era duplicado, ele NÃO estará em 'falhas' e sumirá do balão
+  localStorage.setItem("fila_lotes_offline", JSON.stringify(falhas));
+  atualizarContagemOffline();
+  setSyncing(false);
+  
+  if (falhas.length === 0) {
+    setFeedback({ msg: "✅ Sincronização concluída!", tipo: "sucesso" });
+    if (quadraSelecionada) carregarLotes(quadraSelecionada);
+  }
+};
 
   // --- LÓGICA DE DADOS ---
   async function carregarQuadras() {
@@ -261,22 +287,51 @@ export default function Quadras() {
       <SyncBadge count={offlineCount} onSync={handleSincronizar} syncing={syncing} />
 
       {/* PAINEL QUADRAS */}
+
       <div style={{
-        flex: isMobile ? "none" : "0 0 250px", background: "#fff", borderRadius: "12px", padding: "15px",
-        border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", maxHeight: isMobile ? "160px" : "100%"
+        flex: isMobile ? "none" : "0 0 250px", 
+        background: "#fff", 
+        borderRadius: "12px", 
+        padding: "15px",
+        border: "1px solid #e2e8f0", 
+        display: "flex", 
+        flexDirection: "column", 
+        maxHeight: isMobile ? "180px" : "100%", // Aumentei um pouco a altura no mobile
+        overflow: "hidden"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-          <Map size={16} color="var(--jardim-primaria)" />
-          <h2 style={{ fontSize: "0.9rem", fontWeight: "600" }}>QUADRAS</h2>
+          <Map size={18} color="var(--jardim-primaria)" />
+          <h2 style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>QUADRAS</h2>
         </div>
-        <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: "4px", overflow: "auto" }}>
+        
+        <div style={{ 
+          display: "flex", 
+          flexDirection: isMobile ? "row" : "column", 
+          gap: "8px", // Aumentei o espaçamento entre botões
+          overflowX: "auto", // Scroll horizontal no mobile
+          overflowY: isMobile ? "hidden" : "auto",
+          paddingBottom: isMobile ? "10px" : "0",
+          WebkitOverflowScrolling: "touch"
+        }}>
           {quadras.map(q => (
-            <div key={q.id} onClick={() => carregarLotes(q)} 
+            <div 
+              key={q.id} 
+              onClick={() => carregarLotes(q)} 
               style={{ 
-                padding: "8px 12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px",
-                background: quadraSelecionada?.id === q.id ? "var(--jardim-primaria)" : "transparent",
-                color: quadraSelecionada?.id === q.id ? "#fff" : "#64748b"
-              }}>
+                padding: isMobile ? "12px 20px" : "10px 15px", // Botão maior no mobile (mais fácil de clicar)
+                borderRadius: "10px", 
+                cursor: "pointer",
+                background: quadraSelecionada?.id === q.id ? "var(--jardim-primaria)" : "#f1f5f9",
+                color: quadraSelecionada?.id === q.id ? "#fff" : "#475569",
+                fontWeight: "600", 
+                fontSize: isMobile ? "14px" : "13px", // Fonte um pouco maior
+                whiteSpace: "nowrap", // <--- ESSENCIAL: impede a quebra de linha
+                textAlign: "center",
+                minWidth: "max-content", // Garante que o botão não encolha
+                transition: "all 0.2s ease",
+                border: quadraSelecionada?.id === q.id ? "none" : "1px solid #e2e8f0"
+              }}
+            >
               {q.nome}
             </div>
           ))}
