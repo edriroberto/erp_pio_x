@@ -141,13 +141,13 @@ export default function Sepultamentos() {
           fixa={isMobile}
         />
       </div>
+{/* Alteração aqui: removido maxHeight fixo e garantido o crescimento do container */}
 <div style={{
   flex: 1,
   display: "flex",
   flexDirection: "column",
-  minHeight: 0,
-  maxHeight: '450px', 
-  
+  minHeight: 0, // Mantém o scroll interno funcional
+  height: "100%", // Força o preenchimento total do espaço disponível
 }}>
 
       <ContainerTabela>
