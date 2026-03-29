@@ -119,7 +119,7 @@ export default function Sepultamentos() {
         marginBottom: "3px",
         marginTop: "-10px"
       }}>
-        <h2 style={{ margin: 0, fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
+        <h2 style={{ margin: '10px 0 5px', fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
           Sepultamentos
         </h2>
 
