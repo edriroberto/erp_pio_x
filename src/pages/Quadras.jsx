@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { processarEUploadFoto } from "../utils/uploadService";
-import { Camera, Map, Edit3, Plus, Loader2, CheckCircle2, AlertCircle, WifiOff, CloudUpload } from "lucide-react";
+import { Camera, Map, Edit3, Plus, Loader2, CheckCircle2, AlertCircle, CloudUpload, FileText } from "lucide-react";
 import "../styles/modal.css";
 
 // --- COMPONENTE: INDICADOR DE SINCRONIZAÇÃO ---
@@ -15,10 +15,8 @@ const SyncBadge = ({ count, onSync, syncing }) => {
         background: syncing ? "#94a3b8" : "#f59e0b", color: "#fff",
         padding: "10px 16px", borderRadius: "50px", display: "flex", alignItems: "center",
         gap: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", cursor: "pointer",
-        transition: "transform 0.2s", transform: "scale(1)"
+        transition: "transform 0.2s"
       }}
-      onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
     >
       {syncing ? <Loader2 size={18} className="animate-spin" /> : <CloudUpload size={18} />}
       <span style={{ fontSize: "12px", fontWeight: "bold" }}>
@@ -34,28 +32,38 @@ const LoteCard = ({ lote, selecionado, onClick, abrirFoto }) => (
     onClick={onClick}
     style={{
       background: selecionado ? "#f0fdf4" : "var(--jardim-pedra)",
-      borderRadius: "8px", padding: "8px 12px", marginBottom: "6px", cursor: "pointer",
+      borderRadius: "8px", padding: "10px 12px", marginBottom: "8px", cursor: "pointer",
       border: selecionado ? "1px solid var(--jardim-primaria)" : "1px solid #e2e8f0",
-      borderLeft: `3px solid ${lote.foto_url ? "var(--jardim-acento)" : "#cbd5e0"}`,
+      borderLeft: `4px solid ${lote.foto_url ? "var(--jardim-acento)" : "#cbd5e0"}`,
       display: "flex", alignItems: "center", justifyContent: "space-between"
     }}
   >
-    <div style={{ flex: 1 }}>
-      <div style={{ fontWeight: "600", color: selecionado ? "var(--jardim-primaria)" : "#334155", fontSize: "13px" }}>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontWeight: "600", color: selecionado ? "var(--jardim-primaria)" : "#334155", fontSize: "14px" }}>
         Lote {lote.numero}
       </div>
-      <div style={{ fontSize: "10px", color: "#94a3b8" }}>
+      <div style={{ fontSize: "11px", color: "#64748b" }}>
         {lote.tipos_lote?.descricao || "PADRÃO"} • {lote.capacidade_gavetas} VAGAS
       </div>
+      {/* Visualização rápida da observação */}
+      {lote.observacoes && (
+        <div style={{ 
+          fontSize: "10px", color: "var(--jardim-primaria)", fontStyle: "italic", 
+          marginTop: "4px", display: "flex", alignItems: "center", gap: "4px",
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" 
+        }}>
+          <FileText size={10} /> {lote.observacoes}
+        </div>
+      )}
     </div>
     <div 
       onClick={(e) => { e.stopPropagation(); abrirFoto(lote); }}
       style={{
-        width: "34px", height: "34px", borderRadius: "6px", background: "#fff",
-        display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e8f0", overflow: "hidden"
+        width: "38px", height: "38px", borderRadius: "8px", background: "#fff",
+        display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e8f0", overflow: "hidden", marginLeft: "10px"
       }}
     >
-      {lote.foto_url ? <img src={lote.foto_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Lote" /> : <Camera size={14} color="#94a3b8" />}
+      {lote.foto_url ? <img src={lote.foto_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Lote" /> : <Camera size={16} color="#94a3b8" />}
     </div>
   </div>
 );
@@ -72,22 +80,23 @@ export default function Quadras() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [feedback, setFeedback] = useState({ msg: "", tipo: "" }); 
-  const [novoLote, setNovoLote] = useState({ id: null, numero: "", tipo_id: "", capacidade: 1, foto_url: "" });
   const [offlineCount, setOfflineCount] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  const [novoLote, setNovoLote] = useState({ 
+    id: null, numero: "", tipo_id: "", capacidade: 1, foto_url: "", observacoes: "" 
+  });
 
   useEffect(() => {
     carregarQuadras();
     carregarTipos();
     atualizarContagemOffline();
-    
     const resize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", resize);
-    window.addEventListener("online", sincronizarAutomaticamente);
-    
+    window.addEventListener("online", handleSincronizar);
     return () => {
       window.removeEventListener("resize", resize);
-      window.removeEventListener("online", sincronizarAutomaticamente);
+      window.removeEventListener("online", handleSincronizar);
     };
   }, []);
 
@@ -104,61 +113,56 @@ export default function Quadras() {
     atualizarContagemOffline();
   };
 
-  const sincronizarAutomaticamente = () => {
-    if (contarPendencias() > 0) handleSincronizar();
-  };
+    const handleSincronizar = async () => {
+      const fila = JSON.parse(localStorage.getItem("fila_lotes_offline") || "[]");
+      if (fila.length === 0 || syncing) return;
 
-  const contarPendencias = () => JSON.parse(localStorage.getItem("fila_lotes_offline") || "[]").length;
+      setSyncing(true);
+      const falhas = [];
 
-  const handleSincronizar = async () => {
-  const fila = JSON.parse(localStorage.getItem("fila_lotes_offline") || "[]");
-  if (fila.length === 0 || syncing) return;
+      for (const item of fila) {
+        try {
+          const { tempId, id, ...dadosParaEnvio } = item;
+          let erroSincronismo = null;
+          let idFinal = id;
 
-  setSyncing(true);
-  const falhas = [];
+          if (id) {
+            // MODO EDIÇÃO: Atualiza o existente
+            const { error } = await supabase.from("lotes").update(dadosParaEnvio).eq("id", id);
+            erroSincronismo = error;
+          } else {
+            // MODO NOVO: Insere um novo
+            const { data, error } = await supabase.from("lotes").insert([dadosParaEnvio]).select().single();
+            erroSincronismo = error;
+            if (data) idFinal = data.id;
+          }
 
-  for (const item of fila) {
-    try {
-      const { tempId, ...dadosParaEnvio } = item;
-      
-      // Tenta inserir
-      const { data, error } = await supabase
-        .from("lotes")
-        .insert([dadosParaEnvio])
-        .select()
-        .single();
+          if (erroSincronismo) {
+            if (erroSincronismo.code === '23505') continue; 
+            throw erroSincronismo;
+          }
 
-      if (error) {
-        // CÓDIGO 23505: Unique Violation (Lote já existe)
-        if (error.code === '23505') {
-          console.log(`Lote ${dadosParaEnvio.numero} já existe no banco. Descartando pendência local.`);
-          continue; // Pula para o próximo sem adicionar nas falhas (remove da fila)
+          // Sincroniza as gavetas/capacidade após o sucesso do lote
+          await supabase.rpc('sincronizar_capacidade_lote', { 
+            p_lote_id: idFinal, 
+            p_nova_capacidade: dadosParaEnvio.capacidade_gavetas 
+          });
+
+        } catch (e) {
+          console.error("Falha ao sincronizar item:", e);
+          falhas.push(item);
         }
-        throw error; // Outros erros (conexão, permissão) caem no catch
       }
 
-      // Se inseriu com sucesso, sincroniza as gavetas
-      await supabase.rpc('sincronizar_capacidade_lote', { 
-        p_lote_id: data.id, 
-        p_nova_capacidade: dadosParaEnvio.capacidade_gavetas 
-      });
-
-    } catch (e) {
-      console.error("Erro real na sincronização:", e);
-      falhas.push(item); // Mantém na fila apenas erros de rede ou sistema
-    }
-  }
-
-  // Atualiza o storage: se o lote era duplicado, ele NÃO estará em 'falhas' e sumirá do balão
-  localStorage.setItem("fila_lotes_offline", JSON.stringify(falhas));
-  atualizarContagemOffline();
-  setSyncing(false);
-  
-  if (falhas.length === 0) {
-    setFeedback({ msg: "✅ Sincronização concluída!", tipo: "sucesso" });
-    if (quadraSelecionada) carregarLotes(quadraSelecionada);
-  }
-};
+      localStorage.setItem("fila_lotes_offline", JSON.stringify(falhas));
+      atualizarContagemOffline();
+      setSyncing(false);
+      
+      if (falhas.length === 0) {
+        setFeedback({ msg: "✅ Tudo sincronizado!", tipo: "sucesso" });
+        if (quadraSelecionada) carregarLotes(quadraSelecionada);
+      }
+    };
 
   // --- LÓGICA DE DADOS ---
   async function carregarQuadras() {
@@ -176,30 +180,34 @@ export default function Quadras() {
     setLoteSelecionado(null);
     setLoading(true);
     const { data } = await supabase
-      .from("lotes").select(`id, numero, capacidade_gavetas, tipo_id, foto_url, tipos_lote (id, descricao)`)
+      .from("lotes")
+      .select(`id, numero, capacidade_gavetas, tipo_id, foto_url, observacoes, tipos_lote (id, descricao)`)
       .eq("quadra_id", q.id).order("numero");
     setLotes(data || []);
     setLoading(false);
   }
 
   async function handleSalvarLote() {
-    if (!quadraSelecionada && !showUploadFoto) return;
-    
-    const dadosLote = {
-      numero: novoLote.numero,
-      quadra_id: quadraSelecionada.id,
-      tipo_id: parseInt(novoLote.tipo_id),
-      capacidade_gavetas: parseInt(novoLote.capacidade),
-      foto_url: novoLote.foto_url
-    };
+  if (!quadraSelecionada && !showUploadFoto) return;
+  
+  const dadosLote = {
+    // Se for edição, incluímos o ID para o sincronizador saber o que fazer
+    ...(modoEdicao && { id: novoLote.id }), 
+    numero: novoLote.numero,
+    quadra_id: quadraSelecionada.id,
+    tipo_id: parseInt(novoLote.tipo_id),
+    capacidade_gavetas: parseInt(novoLote.capacidade),
+    foto_url: novoLote.foto_url,
+    observacoes: novoLote.observacoes
+  };
+
 
     setLoading(true);
     setFeedback({ msg: "Processando...", tipo: "info" });
 
-    // Se estiver Offline, pula direto para o storage local
     if (!navigator.onLine) {
       salvarOffline(dadosLote);
-      setFeedback({ msg: "📶 Offline: Salvo no dispositivo!", tipo: "sucesso" });
+      setFeedback({ msg: "📶 Salvo no dispositivo!", tipo: "sucesso" });
       finalizar();
       return;
     }
@@ -215,14 +223,12 @@ export default function Quadras() {
         if (error) throw error;
         await supabase.rpc('sincronizar_capacidade_lote', { p_lote_id: data.id, p_nova_capacidade: dadosLote.capacidade_gavetas });
       }
-
       setFeedback({ msg: "✅ Salvo com sucesso!", tipo: "sucesso" });
       finalizar();
     } catch (err) {
-      // Se falhar por rede, tenta salvar offline
       if (!navigator.onLine || err.message.includes("fetch")) {
         salvarOffline(dadosLote);
-        setFeedback({ msg: "⚠️ Erro de rede. Salvo offline.", tipo: "info" });
+        setFeedback({ msg: "⚠️ Sem rede. Salvo offline.", tipo: "info" });
         finalizar();
       } else {
         setFeedback({ msg: "❌ Erro: " + err.message, tipo: "erro" });
@@ -243,7 +249,7 @@ export default function Quadras() {
     setShowUploadFoto(false);
     setModoEdicao(false);
     setFeedback({ msg: "", tipo: "" });
-    setNovoLote({ id: null, numero: "", tipo_id: "", capacidade: 1, foto_url: "" });
+    setNovoLote({ id: null, numero: "", tipo_id: "", capacidade: 1, foto_url: "", observacoes: "" });
     setLoading(false);
   };
 
@@ -255,7 +261,7 @@ export default function Quadras() {
     try {
       const url = await processarEUploadFoto(file, `lotes/lote_${loteSelecionado.id}_${Date.now()}`);
       setNovoLote(prev => ({ ...prev, foto_url: url }));
-      setFeedback({ msg: "✅ Imagem processada!", tipo: "sucesso" });
+      setFeedback({ msg: "✅ Imagem OK!", tipo: "sucesso" });
     } catch (err) {
       setFeedback({ msg: "❌ Erro no upload", tipo: "erro" });
     } finally {
@@ -263,75 +269,35 @@ export default function Quadras() {
     }
   };
 
-  const AreaFeedback = () => (
-    feedback.msg ? (
-      <div style={{
-        display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderRadius: "8px",
-        marginBottom: "15px", fontSize: "12px", fontWeight: "600",
-        background: feedback.tipo === "sucesso" ? "#ecfdf5" : feedback.tipo === "erro" ? "#fef2f2" : "#eff6ff",
-        color: feedback.tipo === "sucesso" ? "#059669" : feedback.tipo === "erro" ? "#dc2626" : "#2563eb"
-      }}>
-        {feedback.tipo === "sucesso" ? <CheckCircle2 size={14} /> : feedback.tipo === "erro" ? <AlertCircle size={14} /> : <Loader2 size={14} className="animate-spin" />}
-        {feedback.msg}
-      </div>
-    ) : null
-  );
-
   return (
     <div style={{ 
       display: "flex", flexDirection: isMobile ? "column" : "row",
       padding: isMobile ? "10px" : "20px", gap: "15px", height: "100vh", background: "#f8fafc", overflow: "hidden"
     }}>
       
-      {/* INDICADOR FLUTUANTE */}
       <SyncBadge count={offlineCount} onSync={handleSincronizar} syncing={syncing} />
 
-      {/* PAINEL QUADRAS */}
-
+      {/* PAINEL QUADRAS (Scroll Horizontal) */}
       <div style={{
-        flex: isMobile ? "none" : "0 0 250px", 
-        background: "#fff", 
-        borderRadius: "12px", 
-        padding: "15px",
-        border: "1px solid #e2e8f0", 
-        display: "flex", 
-        flexDirection: "column", 
-        maxHeight: isMobile ? "180px" : "100%", // Aumentei um pouco a altura no mobile
-        overflow: "hidden"
+        flex: isMobile ? "none" : "0 0 250px", background: "#fff", borderRadius: "12px", padding: "15px",
+        border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", maxHeight: isMobile ? "180px" : "100%", overflow: "hidden"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
           <Map size={18} color="var(--jardim-primaria)" />
           <h2 style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>QUADRAS</h2>
         </div>
-        
         <div style={{ 
-          display: "flex", 
-          flexDirection: isMobile ? "row" : "column", 
-          gap: "8px", // Aumentei o espaçamento entre botões
-          overflowX: "auto", // Scroll horizontal no mobile
-          overflowY: isMobile ? "hidden" : "auto",
-          paddingBottom: isMobile ? "10px" : "0",
-          WebkitOverflowScrolling: "touch"
+          display: "flex", flexDirection: isMobile ? "row" : "column", gap: "8px", 
+          overflowX: "auto", overflowY: isMobile ? "hidden" : "auto", paddingBottom: isMobile ? "10px" : "0", WebkitOverflowScrolling: "touch"
         }}>
           {quadras.map(q => (
-            <div 
-              key={q.id} 
-              onClick={() => carregarLotes(q)} 
+            <div key={q.id} onClick={() => carregarLotes(q)} 
               style={{ 
-                padding: isMobile ? "12px 20px" : "10px 15px", // Botão maior no mobile (mais fácil de clicar)
-                borderRadius: "10px", 
-                cursor: "pointer",
+                padding: isMobile ? "12px 20px" : "10px 15px", borderRadius: "10px", cursor: "pointer",
                 background: quadraSelecionada?.id === q.id ? "var(--jardim-primaria)" : "#f1f5f9",
                 color: quadraSelecionada?.id === q.id ? "#fff" : "#475569",
-                fontWeight: "600", 
-                fontSize: isMobile ? "14px" : "13px", // Fonte um pouco maior
-                whiteSpace: "nowrap", // <--- ESSENCIAL: impede a quebra de linha
-                textAlign: "center",
-                minWidth: "max-content", // Garante que o botão não encolha
-                transition: "all 0.2s ease",
-                border: quadraSelecionada?.id === q.id ? "none" : "1px solid #e2e8f0"
-              }}
-            >
+                fontWeight: "600", fontSize: isMobile ? "14px" : "13px", whiteSpace: "nowrap", minWidth: "max-content", border: "1px solid #e2e8f0"
+              }}>
               {q.nome}
             </div>
           ))}
@@ -342,21 +308,21 @@ export default function Quadras() {
       <div style={{ flex: 1, background: "#fff", borderRadius: "12px", padding: "15px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
           <div>
-            <span style={{ fontSize: "9px", color: "#94a3b8", fontWeight: "600" }}>{navigator.onLine ? "ONLINE" : "OFFLINE MODO"}</span>
-            <h2 style={{ fontSize: "1.1rem", color: "var(--jardim-primaria)", fontWeight: "600" }}>{quadraSelecionada ? quadraSelecionada.nome : "Selecione"}</h2>
+            <span style={{ fontSize: "9px", color: "#94a3b8", fontWeight: "700" }}>{navigator.onLine ? "MODO ONLINE" : "MODO OFFLINE"}</span>
+            <h2 style={{ fontSize: "1.2rem", color: "var(--jardim-primaria)", fontWeight: "700" }}>{quadraSelecionada ? quadraSelecionada.nome : "Selecione a Quadra"}</h2>
           </div>
           {quadraSelecionada && (
             <div style={{ display: "flex", gap: "8px" }}>
               {loteSelecionado && (
-                <button onClick={() => { setModoEdicao(true); setNovoLote({ id: loteSelecionado.id, numero: loteSelecionado.numero, tipo_id: loteSelecionado.tipo_id, capacidade: loteSelecionado.capacidade_gavetas, foto_url: loteSelecionado.foto_url }); setShowModal(true); }} style={{ background: "var(--jardim-pedra)", border: "1px solid #e2e8f0", padding: "8px", borderRadius: "8px" }}><Edit3 size={16} color="var(--jardim-primaria)" /></button>
+                <button onClick={() => { setModoEdicao(true); setNovoLote({ id: loteSelecionado.id, numero: loteSelecionado.numero, tipo_id: loteSelecionado.tipo_id, capacidade: loteSelecionado.capacidade_gavetas, foto_url: loteSelecionado.foto_url, observacoes: loteSelecionado.observacoes || "" }); setShowModal(true); }} style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", padding: "10px", borderRadius: "10px" }}><Edit3 size={18} color="var(--jardim-primaria)" /></button>
               )}
-              <button onClick={() => { setModoEdicao(false); setShowModal(true); }} style={{ background: "var(--jardim-primaria)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "8px", fontWeight: "600", fontSize: "12px", display: "flex", alignItems: "center", gap: "5px" }}><Plus size={16} /> NOVO</button>
+              <button onClick={() => { setModoEdicao(false); setShowModal(true); }} style={{ background: "var(--jardim-primaria)", color: "#fff", border: "none", padding: "10px 16px", borderRadius: "10px", fontWeight: "700", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}><Plus size={18} /> NOVO</button>
             </div>
           )}
         </div>
 
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {loading && lotes.length === 0 ? <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>Carregando...</p> : 
+          {loading && lotes.length === 0 ? <p style={{ textAlign: "center", padding: "20px", color: "#94a3b8" }}>Buscando lotes...</p> : 
             lotes.map(l => <LoteCard key={l.id} lote={l} selecionado={loteSelecionado?.id === l.id} onClick={() => setLoteSelecionado(l)} abrirFoto={(lote) => { setLoteSelecionado(lote); setNovoLote(prev => ({ ...prev, id: lote.id, foto_url: lote.foto_url || "" })); setShowUploadFoto(true); }} />)
           }
         </div>
@@ -366,37 +332,54 @@ export default function Quadras() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-            <h3 style={{ fontWeight: "600", color: "var(--jardim-primaria)", marginBottom: "15px" }}>{modoEdicao ? "Editar Lote" : "Novo Lote"}</h3>
-            <AreaFeedback />
+            <h3 style={{ fontWeight: "700", color: "var(--jardim-primaria)", marginBottom: "15px" }}>{modoEdicao ? "Editar Lote" : "Novo Lote"}</h3>
+            
+            {feedback.msg && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", borderRadius: "8px", marginBottom: "15px", fontSize: "12px", background: feedback.tipo === "sucesso" ? "#ecfdf5" : "#eff6ff", color: feedback.tipo === "sucesso" ? "#059669" : "#2563eb" }}>
+                {feedback.tipo === "sucesso" ? <CheckCircle2 size={14} /> : <Loader2 size={14} className="animate-spin" />}
+                {feedback.msg}
+              </div>
+            )}
+
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <input placeholder="Número" type="text" value={novoLote.numero} onChange={e => setNovoLote({ ...novoLote, numero: e.target.value })} disabled={loading} />
+              <input placeholder="Número do Lote" type="text" value={novoLote.numero} onChange={e => setNovoLote({ ...novoLote, numero: e.target.value })} disabled={loading} />
+              
               <select value={novoLote.tipo_id} onChange={e => setNovoLote({ ...novoLote, tipo_id: e.target.value })} disabled={loading}>
-                <option value="">Tipo de Lote...</option>
+                <option value="">Selecione o Tipo...</option>
                 {tiposLote.map(t => <option key={t.id} value={t.id}>{t.descricao}</option>)}
               </select>
-              <input placeholder="Capacidade" type="number" value={novoLote.capacidade} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} disabled={loading} />
+
+              <input placeholder="Capacidade (Vagas)" type="number" value={novoLote.capacidade} onChange={e => setNovoLote({ ...novoLote, capacidade: e.target.value })} disabled={loading} />
+
+              <textarea 
+                placeholder="Observações (ex: rachaduras, acesso difícil...)"
+                value={novoLote.observacoes}
+                onChange={e => setNovoLote({ ...novoLote, observacoes: e.target.value })}
+                disabled={loading}
+                style={{ width: "100%", minHeight: "80px", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "14px", fontFamily: "inherit", resize: "none" }}
+              />
             </div>
+
             <div className="modal-row-buttons" style={{ marginTop: "20px" }}>
               <button onClick={fecharModais} className="btn-cancel" disabled={loading}>CANCELAR</button>
-              <button onClick={handleSalvarLote} className="btn-save" disabled={loading}>{loading ? <Loader2 size={14} className="animate-spin" /> : "CONFIRMAR"}</button>
+              <button onClick={handleSalvarLote} className="btn-save" disabled={loading} style={{ background: "var(--jardim-primaria)" }}>{loading ? "SALVANDO..." : "CONFIRMAR"}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL FOTO (Simplificado para o teste) */}
+      {/* MODAL FOTO */}
       {showUploadFoto && (
         <div className="modal-overlay">
           <div className="modal-box-vertical">
-            <h3>Foto: Lote {loteSelecionado?.numero}</h3>
-            <AreaFeedback />
+            <h3 style={{ marginBottom: "15px" }}>Foto: Lote {loteSelecionado?.numero}</h3>
             <div className="preview-foto-vertical">
               {novoLote.foto_url ? <img src={novoLote.foto_url} alt="Preview" /> : <div className="sem-foto-v"><span>📷 Sem foto</span></div>}
             </div>
-            <div className="modal-row-buttons">
-              <label className="btn-captura-v camera">📸 Foto<input type="file" accept="image/*" capture="environment" onChange={handleUpload} style={{ display: "none" }} /></label>
+            <div className="modal-row-buttons" style={{ marginTop: "15px" }}>
+              <label className="btn-captura-v camera">📸 Tirar Foto<input type="file" accept="image/*" capture="environment" onChange={handleUpload} style={{ display: "none" }} /></label>
               <button onClick={fecharModais} className="btn-cancel">Fechar</button>
-              <button onClick={handleSalvarLote} className="btn-save" disabled={loading || !novoLote.foto_url}>Salvar</button>
+              <button onClick={handleSalvarLote} className="btn-save" disabled={loading || !novoLote.foto_url}>Salvar Foto</button>
             </div>
           </div>
         </div>

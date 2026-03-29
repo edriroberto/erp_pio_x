@@ -4,7 +4,7 @@ const LoteCard = ({ lote, selecionado, onClick, abrirFoto }) => (
     style={{
       background: selecionado ? "#f0fdf4" : "var(--jardim-pedra)",
       borderRadius: "8px",
-      padding: "8px 12px", // Respiro melhor
+      padding: "8px 12px", 
       marginBottom: "6px",
       cursor: "pointer",
       border: selecionado ? "1px solid var(--jardim-primaria)" : "1px solid #e2e8f0",
@@ -16,27 +16,39 @@ const LoteCard = ({ lote, selecionado, onClick, abrirFoto }) => (
   >
     <div style={{ flex: 1 }}>
       <div style={{ 
-        fontWeight: "600", // Menos pesado que 800
+        fontWeight: "600", 
         color: selecionado ? "var(--jardim-primaria)" : "#334155", 
         fontSize: "13px",
-        letterSpacing: "0.5px" // Dá elegância
+        letterSpacing: "0.5px" 
       }}>
         Lote {lote.numero}
       </div>
       <div style={{ 
         fontSize: "10px", 
-        color: "#94a3b8", // Cinza mais suave
+        color: "#94a3b8", 
         marginTop: "1px", 
-        fontWeight: "400" // Fonte fina para contraste
+        fontWeight: "400" 
       }}>
         {lote.tipos_lote?.descricao || "Não definido"} • {lote.capacidade_gavetas} vagas
       </div>
+      
+      {/* INSERÇÃO: Campo de Observações */}
+      {lote.observacoes && (
+        <div style={{ 
+          fontSize: "10px", 
+          color: "#64748b", 
+          fontStyle: "italic", 
+          marginTop: "2px",
+          display: "block"
+        }}>
+          {lote.observacoes}
+        </div>
+      )}
     </div>
     
-    {/* Ícone de foto menor e mais discreto */}
     <div style={{ opacity: lote.foto_url ? 1 : 0.4 }}>
        {lote.foto_url ? 
-         <img src={lote.foto_url} style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "cover" }} /> : 
+         <img src={lote.foto_url} style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "cover" }} alt="Lote" /> : 
          <Camera size={14} color="#94a3b8" />
        }
     </div>
