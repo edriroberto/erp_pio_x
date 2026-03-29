@@ -213,7 +213,8 @@ async function confirmarLiberacao() {
   display: "flex",
   flexDirection: "column",
   minHeight: 0,
-  maxHeight: '400px'
+  // height: '100%'  <-- Adicione isso
+  // maxHeight: '400px' <-- REMOVA OU COMENTE ESTA LINHA
 }}>
   <ContainerTabela>
         {loading ? (
