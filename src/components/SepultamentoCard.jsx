@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { 
   AlertCircle, 
-  MapPin,    // Para Local/Quadra
-  Star,      // Para Nascimento
+  MapPin,    
+  Star,      
   Cross,
 } from "lucide-react";
 
@@ -17,14 +17,10 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
 
   if (!dado) return null;
 
-  // --- LÓGICA DE CÁLCULO (O "HOOK" DE IDADE) ---
   const calcularIdade = () => {
-    // Tenta pegar das datas cruas ou das já formatadas que vem do List
     const dn = dado.data_nascimento || dado.nascimento;
     const df = dado.data_falecimento || dado.falecimento;
-
     if (!dn || !df) return dado.idade || "—";
-    
     try {
       const parseData = (d) => {
         if (!d) return null;
@@ -35,21 +31,14 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
         }
         return new Date(d);
       };
-
       const nasc = parseData(dn);
       const falec = parseData(df);
-
       if (!nasc || !falec || isNaN(nasc) || isNaN(falec)) return dado.idade || "—";
-      
       let idade = falec.getFullYear() - nasc.getFullYear();
       const m = falec.getMonth() - nasc.getMonth();
-      if (m < 0 || (m === 0 && falec.getDate() < nasc.getDate())) {
-        idade--;
-      }
+      if (m < 0 || (m === 0 && falec.getDate() < nasc.getDate())) idade--;
       return idade >= 0 ? idade : (dado.idade || "—");
-    } catch (e) {
-      return dado.idade || "—";
-    }
+    } catch (e) { return dado.idade || "—"; }
   };
 
   const idadeFinal = calcularIdade();
@@ -65,74 +54,104 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
       <div 
         onClick={onClick}
         style={{
-          background: '#fff',
-          borderRadius: '8px',
-          padding: '6px 10px',
-          margin: '2px 5px 2px 5px', 
+          background: selecionado ? '#f0fdf4' : 'var(--jardim-pedra)', // Mármore por padrão
+          borderRadius: '0px', // Lista contínua como no exumação
+          padding: '5px 10px',
+          marginBottom: '2px', 
           cursor: 'pointer',
-          borderLeft: `3px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
-          backgroundColor: pendencia ? "#fff5f5" : "#fff",
-          boxShadow: selecionado ? '0 2px 8px rgba(52,152,219,0.15)' : '0 1px 2px rgba(0,0,0,0.05)',
-          borderTop: '1px solid #eee',
-          borderRight: '1px solid #eee',
-          borderBottom: '1px solid #eee',
+          // Borda lateral: Vermelho se pendente, Verde Musgo se selecionado, Cinza se neutro
+          borderLeft: `4px solid ${pendencia ? "#e53e3e" : (selecionado ? "var(--jardim-primaria)" : "#cbd5e0")}`,
+          borderTop: '1px solid #e2e8f0',
+          borderBottom: '1px solid #e2e8f0',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+          width: '100%',
+          boxSizing: 'border-box'
         }}
       >
+        {/* Nome e ID */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: '#08060d', flex: 1, lineHeight: '1.1' }}>
-            {pendencia && (
-              <span style={{ marginRight: 3 }}>
-                <AlertCircle size={11} color="#e53e3e" strokeWidth={2} />
-              </span>
-            )}
-            {dado.nome}
+          <div style={{ 
+            fontSize: '12px', 
+            fontWeight: '800', 
+            color: pendencia ? "#c53030" : "var(--jardim-primaria)", 
+            flex: 1, 
+            lineHeight: '1.0' 
+          }}>
+            {pendencia && <AlertCircle size={12} color="#e53e3e" style={{ marginRight: 4, verticalAlign: 'middle' }} />}
+            {dado.nome?.toUpperCase()}
           </div>
-          <span style={{ fontSize: '10px', color: '#ccc', marginLeft: '8px' }}>#{dado.id}</span>
+          <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#94a3b8' }}>#{dado.id}</span>
         </div>
 
+        {/* Localização em linha única cinza suave */}
         <div style={{ 
-          fontSize: '11px', color: '#444', 
-          background: pendencia ? 'rgba(229, 62, 62, 0.04)' : '#f3f4f6', 
-          padding: '1px 4px', borderRadius: '4px',
-          marginBottom: '-3px', marginTop: '-5px',
-          display: 'flex', justifyContent: 'space-between',
-          gap: "10px",
-          marginLeft: -5,
+          fontSize: '11px', 
+          color: '#475569', 
+          background: 'rgba(0,0,0,0.03)', 
+          padding: '2px 8px', 
+          borderRadius: '4px',
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '8px',
+          margin: '2px 0 1px 0'
         }}>
-          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '4px' }} title="Quadra/Local">
-            <MapPin size={14} color="#718096" />
-            <span>
-              {dado.quadra} 
-              <span style={{ fontSize: '11px', margin: '0 8px' }}>•</span>
-              {dado.lote} 
-              <span style={{ fontSize: '11px', margin: '0 8px' }}>•</span>
-              Pos. {dado.gaveta || "-"}
-            </span>
-          </div>
+          <MapPin size={12} color="#64748b" />
+          <span style={{ fontWeight: '600' }}>
+            {dado.quadra} • {dado.lote} • Pos. {dado.gaveta || "-"}
+          </span>
         </div>
        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-          <Star size={12} color="#718096" />
-          <span style={{ fontSize: '11px', color: '#4a5568' }}>
-            <strong>{exibirData(dado.nascimento || dado.data_nascimento)}</strong>
-          </span>
-          <span style={{ fontSize: '11px', margin: '0 8px' }}>•</span>
-          <Cross size={12} color="#718096" />
-          <span style={{ fontSize: '11px', color: '#4a5568' }}>
-            <strong>{exibirData(dado.falecimento || dado.data_falecimento)}</strong>
-          </span>
-          <span style={{ fontSize: '11px', marginLeft: 'auto', color: '#2b4c9b' }}>
-            <strong>{idadeFinal} anos</strong>
+        {/* Datas e Idade */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px', marginBottom: '2px', gap: '2px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <Star size={11} color="#94a3b8" />
+              <span style={{ fontSize: '10px', color: '#334155', fontWeight: '700' }}>
+                {exibirData(dado.nascimento || dado.data_nascimento)}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <Cross size={11} color="#94a3b8" />
+              <span style={{ fontSize: '10px', color: '#334155', fontWeight: '700' }}>
+                {exibirData(dado.falecimento || dado.data_falecimento)}
+              </span>
+            </div>
+          </div>
+          
+          <span style={{ 
+            fontSize: '10px', 
+            background: 'var(--jardim-acento)', 
+            color: '#fff', 
+            padding: '1px 8px', 
+            borderRadius: '10px',
+            fontWeight: '800'
+          }}>
+            {idadeFinal} ANOS
           </span>
         </div>                   
 
-        <div style={{ fontSize: '11px', color: '#777', borderTop: '1px solid #f2f2f2', paddingTop: '2px', marginBottom:'3px', marginTop: '4px' }}>
-          <div style={{ lineHeight: '1.1' }}>
-            <strong>Funerária {dado.funeraria || "—"}</strong> 
+        {/* Funerária e Obs */}
+        <div style={{ 
+          fontSize: '10px', 
+          color: '#64748b', 
+          borderTop: '1px solid #e2e8f0', 
+          paddingTop: '4px', 
+          marginTop: '1px' 
+        }}>
+          <div style={{ fontWeight: '700', textTransform: 'uppercase', fontSize: '9px' }}>
+            Funerária <span style={{ color: '#334155' }}>{dado.funeraria || "—"}</span>
           </div>
           {dado.observacoes && (
-            <div style={{ fontSize: '9px', color: '#999', fontStyle: 'italic', lineHeight: '1.1', marginTop: '4px' }}>
-              {dado.observacoes}
+            <div style={{ 
+              fontSize: '10px', 
+              color: '#94a3b8', 
+              fontStyle: 'italic', 
+              marginTop: '2px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              "{dado.observacoes}"
             </div>
           )}
         </div>
@@ -140,42 +159,39 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
     );
   }
 
-  // --- DESKTOP (TABELA ALINHADA) ---
+  // --- DESKTOP ---
   return (
     <tr 
       onClick={onClick}
       style={{ 
         cursor: 'pointer',
-        backgroundColor: selecionado ? "#ebf5ff" : (pendencia ? "#fff5f5" : "transparent"),
+        backgroundColor: selecionado ? "#f0fdf4" : (pendencia ? "#fff5f5" : "transparent"),
         fontSize: '13px',
-        borderBottom: '1px solid #eee'
+        borderBottom: '1px solid #e2e8f0',
+        transition: 'background 0.2s'
       }}
-    >                                 
-      <td style={{ padding: '8px', display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}>
-        {pendencia && (
-          <AlertCircle 
-            size={16} 
-            color="#e53e3e" 
-            strokeWidth={2.5}
-            title="Óbito pendente" 
-          />
-        )}
-        {dado.nome}
+    >                                    
+      <td style={{ padding: '10px 8px', fontWeight: "700", color: pendencia ? "#c53030" : "var(--jardim-primaria)" }}>
+        {pendencia && <AlertCircle size={14} color="#e53e3e" style={{ marginRight: 8, verticalAlign: 'middle' }} />}
+        {dado.nome?.toUpperCase()}
       </td>
-      <td style={{ padding: '8px' }}>{dado.quadra}</td>
-      <td style={{ padding: '8px', textAlign: 'center' }}>{dado.lote}</td>
-      <td style={{ padding: '8px', textAlign: 'center' }}>{dado.gaveta || "-"}</td>
-      <td style={{ padding: '8px' }}>{exibirData(dado.nascimento || dado.data_nascimento)}</td>
-      <td style={{ padding: '8px' }}>{exibirData(dado.falecimento || dado.data_falecimento)}</td>
-      <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>
-        {idadeFinal}
+      <td style={{ padding: '10px 8px', color: '#475569' }}>{dado.quadra}</td>
+      <td style={{ padding: '10px 8px', textAlign: 'center', color: '#475569' }}>{dado.lote}</td>
+      <td style={{ padding: '10px 8px', textAlign: 'center', color: '#475569' }}>{dado.gaveta || "-"}</td>
+      <td style={{ padding: '10px 8px', fontWeight: '600' }}>{exibirData(dado.nascimento || dado.data_nascimento)}</td>
+      <td style={{ padding: '10px 8px', fontWeight: '600' }}>{exibirData(dado.falecimento || dado.data_falecimento)}</td>
+      <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+        <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontWeight: '800' }}>
+          {idadeFinal}
+        </span>
       </td>
-      <td style={{ padding: '8px' }}>{dado.funeraria}</td>
+      <td style={{ padding: '10px 8px', fontSize: '12px' }}>{dado.funeraria}</td>
       <td style={{ 
-        padding: '8px 12px',
-        fontSize: '12px', 
-        color: pendencia ? "#c53030" : "#666",
-        maxWidth: '200px',
+        padding: '10px 8px',
+        fontSize: '11px', 
+        color: '#94a3b8',
+        fontStyle: 'italic',
+        maxWidth: '150px',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap'
