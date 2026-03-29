@@ -102,7 +102,7 @@ export default function Sepultamentos() {
       {isOffline && (
         <div style={{
           background: "#feebc8", color: "#c05621", padding: "8px 15px", 
-          borderRadius: "8px", marginBottom: "15px", display: "flex", 
+          borderRadius: "8px", marginBottom: "5px", display: "flex", marginTop: "5px", 
           alignItems: "center", gap: "10px", fontSize: "14px", fontWeight: "bold"
         }}>
           <WifiOff size={18} /> Modo Offline: Exibindo dados salvos localmente.
@@ -115,8 +115,8 @@ export default function Sepultamentos() {
         flexDirection: isMobile ? "column" : "row",
         alignItems: isMobile ? "stretch" : "center",
         justifyContent: "space-between",
-        gap: isMobile ? "8px" : "20px",
-        marginBottom: "-5px",
+        gap: isMobile ? "5px" : "10px",
+        marginBottom: "3px",
         marginTop: "-10px"
       }}>
         <h2 style={{ margin: 0, fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
@@ -146,7 +146,8 @@ export default function Sepultamentos() {
   display: "flex",
   flexDirection: "column",
   minHeight: 0,
-  maxHeight: '450px'
+  maxHeight: '450px', 
+  
 }}>
 
       <ContainerTabela>

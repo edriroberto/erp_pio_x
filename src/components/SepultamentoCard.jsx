@@ -68,7 +68,7 @@ const SepultamentoCard = ({ dado, selecionado, onClick, formatarData }) => {
           background: '#fff',
           borderRadius: '8px',
           padding: '6px 10px',
-          margin: '2px 5px 7px 5px', 
+          margin: '2px 5px 2px 5px', 
           cursor: 'pointer',
           borderLeft: `3px solid ${pendencia ? "#e53e3e" : (selecionado ? "#3498db" : "#2c3e50")}`,
           backgroundColor: pendencia ? "#fff5f5" : "#fff",

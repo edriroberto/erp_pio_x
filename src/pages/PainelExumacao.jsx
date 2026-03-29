@@ -305,11 +305,12 @@ async function confirmarLiberacao() {
                   value={dadosExumacao.destino}
                   onChange={(e) => setDadosExumacao({...dadosExumacao, destino: e.target.value})}
                 >
-                  <option value="Ossário Municipal">Ossário Municipal</option>
+                  <option value="Ossuário Municipal">Ossuário Municipal</option>
                   <option value="Retirado pela Família">Retirado pela Família</option>
                   <option value="Transferência de Cemitério">Transferência de Cemitério</option>
+                  <option value="Transferência Interna">Transferência Interna</option>
                   <option value="Cremação">Cremação</option>
-                  <option value="Outros">Outors...</option>
+                  <option value="Outros">Outros...</option>
                 </select>
               </div>
 

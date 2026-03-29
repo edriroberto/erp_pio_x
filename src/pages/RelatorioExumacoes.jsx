@@ -71,7 +71,7 @@ export default function RelatorioExumacoes() {
 
   return (
     <ContainerPagina>
-      {/* Cabeçalho de Busca Estilizado (Jardim) */}
+      {/* Cabeçalho de Busca - Paleta Jardim */}
       <div style={{
         ...styles.searchHeader,
         flexDirection: isMobile ? "column" : "row",
@@ -96,10 +96,7 @@ export default function RelatorioExumacoes() {
         <div style={styles.actions}>
           <span style={styles.count}>{dadosFiltrados.length} exumações</span>
           
-          <button onClick={handleGerarPDF} style={{
-            ...styles.btnPdfPersonalizado,
-            padding: isMobile ? "8px 12px" : "10px 18px",
-          }}>
+          <button onClick={handleGerarPDF} style={styles.btnPdfPersonalizado}>
             <FileText size={16} /> PDF
           </button>
 
@@ -111,13 +108,17 @@ export default function RelatorioExumacoes() {
         </div>
       </div>
 
+      {/* ÁREA DE SCROLL GARANTIDA */}
       <div style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
+        overflowY: "auto",      // Ativa o scroll vertical
+        maxHeight: isMobile ? "calc(100vh - 250px)" : "600px", // Limite de altura
+        WebkitOverflowScrolling: "touch", // Scroll suave no iPhone
         width: "100%",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        paddingBottom: "80px"   // Espaço para não cobrir o último card
       }}>
         <ContainerTabela>
           {loading ? (
@@ -125,14 +126,12 @@ export default function RelatorioExumacoes() {
           ) : dadosFiltrados.length === 0 ? (
             <div style={styles.empty}>Nenhum registro encontrado</div>
           ) : isMobile ? (
-            <div style={{ paddingBottom: 20 }}>
-              <ExumacaoLogList
-                dados={dadosFiltrados}
-                selecionado={selecionado}
-                onSelecionar={setSelecionado}
-                formatarData={formatarData}
-              />
-            </div>
+            <ExumacaoLogList
+              dados={dadosFiltrados}
+              selecionado={selecionado}
+              onSelecionar={setSelecionado}
+              formatarData={formatarData}
+            />
           ) : (
             <table className="tabela">
               <thead>
@@ -203,7 +202,7 @@ const styles = {
     display: "flex", 
     justifyContent: "space-between", 
     gap: "12px", 
-    marginBottom: "15px", 
+    marginBottom: "10px", 
     marginTop: "-5px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
     boxSizing: "border-box"
@@ -227,7 +226,8 @@ const styles = {
     display: "flex", 
     alignItems: "center", 
     gap: "6px", 
-    background: "#991b1b", // Vermelho sóbrio (Terracota)
+    padding: "8px 14px",
+    background: "#991b1b", 
     color: "#fff", 
     border: "none", 
     borderRadius: "8px", 
@@ -240,21 +240,15 @@ const styles = {
     display: "flex", 
     alignItems: "center", 
     justifyContent: "center",
-    width: "38px",
-    height: "38px",
+    width: "36px",
+    height: "36px",
     background: "#fff5f5", 
     color: "#e53e3e", 
     border: "1px solid #feb2b2", 
     borderRadius: "8px", 
     cursor: "pointer" 
   },
-  btnIcon: { 
-    background: "none", 
-    border: "none", 
-    cursor: "pointer", 
-    fontSize: "16px",
-    opacity: 0.7 
-  },
+  btnIcon: { background: "none", border: "none", cursor: "pointer", fontSize: "16px", opacity: 0.7 },
   badge: { 
     padding: "4px 12px", 
     borderRadius: "20px", 
@@ -263,11 +257,5 @@ const styles = {
     display: "inline-block",
     textTransform: "uppercase" 
   },
-  empty: { 
-    textAlign: "center", 
-    padding: "40px", 
-    color: "#94a3b8",
-    fontSize: "14px",
-    fontWeight: "500"
-  }
+  empty: { textAlign: "center", padding: "40px", color: "#94a3b8", fontSize: "14px", fontWeight: "500" }
 };
