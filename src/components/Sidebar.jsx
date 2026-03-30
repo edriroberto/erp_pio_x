@@ -12,7 +12,8 @@ import {
   Archive, 
   FileSearch, 
   LogOut,
-  User
+  User,
+  MapPin
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -52,6 +53,7 @@ export default function Sidebar() {
     { to: "/sepultamentos", label: "Registros", icon: UserPlus },
     { to: "/sepultamentos-nome", label: "Busca Nome", icon: Search },
     { to: "/sepultamentos-periodo", label: "Período", icon: Calendar },
+    { to: "/sepultamentos-lote", label: "Busca por Lote", icon: MapPin },
     { to: "/quadras", label: "Quadras", icon: LayoutGrid },
     { to: "/funerarias", label: "Funerárias", icon: Building2 },
     { to: "/coveiros", label: "Coveiros", icon: UserRound },
@@ -64,7 +66,7 @@ export default function Sidebar() {
     return (
       <nav style={styles.mobileNav}>
         {navLinks
-          .filter((_, index) => [0, 1, 4, 7, 8].includes(index))
+          .filter((_, index) => [0, 1, 5, 8, 9].includes(index))
           .map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.to;
