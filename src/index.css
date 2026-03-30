@@ -14,8 +14,11 @@
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
 
   font: 18px/145% var(--sans);
+  min-height: -webkit-fill-available;
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--text);
@@ -24,6 +27,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  body {
+    margin: 0;
+    /* Importante para o modo "Web App" do iOS */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    
+    /* Evita que o conteúdo principal fique embaixo do relógio/notch */
+    padding-top: var(--sat);
+  }
 
   @media (max-width: 1024px) {
     font-size: 16px;

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
+import { useAuth } from "../Hooks/useAuth"; // Hook de segurança
 import { 
   Home, 
   UserPlus, 
@@ -13,33 +14,20 @@ import {
   FileSearch, 
   LogOut,
   User,
-  MapPin
+  MapPin,
+  Loader2
 } from "lucide-react";
 
 export default function Sidebar() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [user, setUser] = useState(null);
+  const { perfil, loading } = useAuth(); // Pegamos o nível de acesso real do banco
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
-
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user ?? null);
-    };
-    getSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      listener.subscription.unsubscribe();
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleLogout = async () => {
@@ -47,72 +35,110 @@ export default function Sidebar() {
     navigate("/login");
   };
 
-  // Definição moderna de ícones com Lucide
+  // --- DEFINIÇÃO DE LINKS COM PERMISSÕES ---
+  // Adicionamos a propriedade 'niveis' para cada rota
   const navLinks = [
-    { to: "/", label: "Início", icon: Home },
-    { to: "/sepultamentos", label: "Registros", icon: UserPlus },
-    { to: "/sepultamentos-nome", label: "Busca Nome", icon: Search },
-    { to: "/sepultamentos-periodo", label: "Período", icon: Calendar },
-    { to: "/sepultamentos-lote", label: "Busca por Lote", icon: MapPin },
-    { to: "/quadras", label: "Quadras", icon: LayoutGrid },
-    { to: "/funerarias", label: "Funerárias", icon: Building2 },
-    { to: "/coveiros", label: "Coveiros", icon: UserRound },
-    { to: "/exumacoes", label: "Exumar", icon: Archive },
-    { to: "/relatorioexumacoes", label: "Relatórios", icon: FileSearch }
+    { to: "/", label: "Início", icon: Home, niveis: ['consulta', 'admin', 'master'] },
+    { to: "/sepultamentos", label: "Registros", icon: UserPlus, niveis: ['admin', 'master'] },
+    { to: "/sepultamentos-nome", label: "Busca Nome", icon: Search, niveis: ['consulta', 'admin', 'master'] },
+    { to: "/sepultamentos-periodo", label: "Período", icon: Calendar, niveis: ['consulta', 'admin', 'master'] },
+    { to: "/sepultamentos-lote", label: "Busca por Lotes", icon: MapPin, niveis: ['consulta', 'admin', 'master'] },
+    { to: "/quadras", label: "Quadras", icon: LayoutGrid, niveis: ['admin', 'master'] },
+    { to: "/funerarias", label: "Funerárias", icon: Building2, niveis: ['admin', 'master'] },
+    { to: "/coveiros", label: "Coveiros", icon: UserRound, niveis: ['admin', 'master'] },
+    { to: "/exumacoes", label: "Exumar", icon: Archive, niveis: ['master'] },
+    { to: "/relatorioexumacoes", label: "Relatórios", icon: FileSearch, niveis: ['master'] },
+    { to: "/usuarios", label: "Usuários", icon: FileSearch, niveis: ['master'] }
   ];
 
-  // --- RENDERIZAÇÃO MOBILE (Bottom Navigation 2026) ---
-  if (isMobile) {
+  // Filtra os links que o usuário atual PODE ver
+  const linksPermitidos = navLinks.filter(link => 
+    perfil && link.niveis.includes(perfil.nivel)
+  );
+
+  // Estado de carregamento para evitar "pulo" de interface
+  if (loading) {
     return (
-      <nav style={styles.mobileNav}>
-        {navLinks
-          .filter((_, index) => [0, 1, 5, 8, 9].includes(index))
-          .map((link) => {
-            const Icon = link.icon;
-            const isActive = location.pathname === link.to;
-            return (
-              <NavLink 
-                key={link.to} 
-                to={link.to} 
-                style={{
-                  ...styles.mobileItem,
-                  color: isActive ? "#4fd1c5" : "#a4b0be"
-                }}
-              >
-                {isActive && <div style={styles.activeIndicator} />}
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
-                <span style={{ fontWeight: isActive ? "700" : "500" }}>{link.label}</span>
-              </NavLink>
-            );
-          })} 
-        
-        <button onClick={handleLogout} style={styles.mobileLogout}>
-          <LogOut size={22} strokeWidth={1.8} />
-          <span>Sair</span>
-        </button>
-      </nav>
+      <aside style={{...styles.sidebar, justifyContent: 'center', alignItems: 'center'}}>
+        <Loader2 className="animate-spin" color="#4fd1c5" />
+      </aside>
     );
   }
 
-  // --- RENDERIZAÇÃO DESKTOP (Modern Sidebar) ---
+  // --- RENDERIZAÇÃO MOBILE ---
+  if (isMobile) {
+
+    
+    return (
+          <nav style={styles.mobileNav}>
+          {/* LÓGICA DINÂMICA:
+              Se for Master: Mostra 0, 1, 5, 8, 9
+              Se NÃO for Master: Mostra apenas 0 e 2 (Início e Busca Nome)
+          */}
+          {linksPermitidos
+            .filter((_, index) => {
+              if (perfil?.nivel === 'master') {
+                // Atalhos de poder para você
+                return [0, 1, 5, 8, 9].includes(index);
+              } else {
+                // Atalhos simplificados para colegas/coveiros
+                return [0, 1].includes(index);
+              }
+            })
+            .map((link) => {
+              const Icon = link.icon;
+              const isActive = location.pathname === link.to;
+              return (
+                <NavLink 
+                  key={link.to} 
+                  to={link.to} 
+                  style={{
+                    ...styles.mobileItem,
+                    color: isActive ? "#4fd1c5" : "#a4b0be"
+                  }}
+                >
+                  {isActive && <div style={styles.activeIndicator} />}
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
+                  <span style={{ fontWeight: isActive ? "700" : "500" }}>{link.label}</span>
+                </NavLink>
+              );
+            })} 
+
+          <button onClick={handleLogout} style={styles.mobileLogout}>
+            <LogOut size={22} />
+            <span>Sair</span>
+          </button>
+        </nav>
+    );
+  }
+
+  // --- RENDERIZAÇÃO DESKTOP ---
   return (
     <aside style={styles.sidebar}>
       <div style={styles.logo}>
         <div style={styles.logoIcon}>P</div>
-        <span>ERP Cemitério</span>
+        <span>ERP Jardim</span>
       </div>
       
-      {user ? (
-        <div style={styles.userInfo}>
-          <User size={16} color="#55efc4" />
-          <span>{user?.email?.split('@')[0].toLowerCase()}</span>
+      <div style={styles.userInfo}>
+        <div style={{
+          padding: '4px 8px',
+          borderRadius: '4px',
+          background: perfil?.nivel === 'master' ? '#70a1ff22' : '#2f3542',
+          color: perfil?.nivel === 'master' ? '#70a1ff' : '#a0aec0',
+          fontSize: '10px',
+          fontWeight: 'bold',
+          textTransform: 'uppercase'
+        }}>
+          {perfil?.nivel || 'Visitante'}
         </div>
-      ) : (
-        <div style={styles.userInfo}>🔒 ACESSO RESTRITO</div>
-      )}
+        <span style={{ fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {perfil?.email?.split('@')[0]}
+        </span>
+      </div>
 
       <nav style={styles.desktopNav}>
-        {navLinks.map((link) => {
+        {linksPermitidos.map((link) => {
           const Icon = link.icon;
           const isActive = location.pathname === link.to;
           return (
@@ -135,30 +161,28 @@ export default function Sidebar() {
 
       <button onClick={handleLogout} style={styles.logoutButton}>
         <LogOut size={18} />
-        Sair do Sistema
+        Encerrar Sessão
       </button>
     </aside>
   );
 }
 
-// --- SISTEMA DE ESTILOS ---
+// --- ESTILOS (Mantidos e Otimizados) ---
 const styles = {
-  // MOBILE
   mobileNav: {
     position: "fixed",
     bottom: 0,
     left: 0,
     right: 0,
     height: "70px",
-    background: "rgba(26, 32, 44, 0.96)",
-    backdropFilter: "blur(10px)",
+    background: "rgba(26, 32, 44, 0.98)",
+    backdropFilter: "blur(15px)",
     display: "flex", 
     justifyContent: "space-around",
     alignItems: "center",
     paddingBottom: "env(safe-area-inset-bottom)", 
     borderTop: "1px solid rgba(255, 255, 255, 0.1)",
     zIndex: 1000,
-    boxShadow: "0 -4px 20px rgba(0,0,0,0.3)"
   },
   mobileItem: {
     display: "flex", 
@@ -173,11 +197,10 @@ const styles = {
   activeIndicator: {
     position: "absolute",
     top: "-15px",
-    width: "15px",
+    width: "20px",
     height: "3px",
     background: "#4fd1c5",
     borderRadius: "0 0 4px 4px",
-    boxShadow: "0 2px 10px rgba(79, 209, 197, 0.6)"
   },
   mobileLogout: {
     background: "none", 
@@ -190,8 +213,6 @@ const styles = {
     gap: "5px",
     flex: 1
   },
-
-  // DESKTOP
   sidebar: {
     width: 260,
     height: "100vh",
@@ -209,7 +230,6 @@ const styles = {
     gap: "10px",
     fontSize: "16px",
     fontWeight: "800",
-    letterSpacing: "1px",
     marginBottom: "30px",
     color: "#4fd1c5"
   },
@@ -221,16 +241,17 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: "6px"
+    borderRadius: "6px",
+    fontWeight: "bold"
   },
   userInfo: {
     marginBottom: "25px",
-    fontSize: "11px",
-    color: "#a0aec0",
     display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "0 10px"
+    flexDirection: "column",
+    gap: "8px",
+    padding: "12px",
+    background: "rgba(255,255,255,0.03)",
+    borderRadius: "8px"
   },
   desktopNav: {
     display: "flex", 
@@ -250,19 +271,17 @@ const styles = {
     borderRadius: "0 8px 8px 0"
   },
   logoutButton: {
-    padding: "14px",
+    padding: "12px",
     background: "rgba(234, 67, 53, 0.1)",
     color: "#ea4335",
     border: "1px solid rgba(234, 67, 53, 0.2)",
     borderRadius: "8px",
     cursor: "pointer",
-    width: "100%",
     marginTop: "20px",
     fontWeight: "bold",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "10px",
-    transition: "all 0.2s"
   }
 };

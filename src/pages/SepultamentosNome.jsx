@@ -6,22 +6,19 @@ import { AlertCircle, UserSearch } from "lucide-react";
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
 import SepultamentoSearchBar from "../components/SepultamentoSearchBar";
+import SepultamentoList from "../components/SepultamentoList"; // Componente padronizado
 
 // Utilitários padronizados
 import { formatarData, calcularIdade } from "../utils/formatarData";
+import { useIsMobile } from "../Hooks/useMobile"; // Usando seu hook de mobile
 
 import "../styles/tabela.css";
 
 export default function SepultamentosPorNome() {
   const [busca, setBusca] = useState("");
   const [dados, setDados] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const [selecionado, setSelecionado] = useState(null); // Estado para seleção
+  const isMobile = useIsMobile();
 
   // Busca sempre que o termo de busca mudar
   useEffect(() => {
@@ -41,10 +38,10 @@ export default function SepultamentosPorNome() {
       if (error) throw error;
       
       if (data) {
-        // Usando a lógica centralizada para garantir consistência
         const dadosProcessados = data.map(s => ({
           ...s,
-          idadeExibicao: calcularIdade(s.data_nascimento, s.data_falecimento)
+          // Mantendo a compatibilidade de nomes de campos entre as views/tabelas
+          idade: s.idade || calcularIdade(s.data_nascimento, s.data_falecimento)
         }));
         setDados(dadosProcessados);
       }
@@ -52,45 +49,6 @@ export default function SepultamentosPorNome() {
       console.error("Erro na busca:", error.message);
     }
   }
-
-  // Componente de Cartão Mobile (Mantendo seu Design Original)
-  const CartaoMobileBusca = ({ s }) => {
-    const pendencia = s.obito_entregue === false;
-    return (
-      <div style={{
-        background: "#fff",
-        borderRadius: "12px",
-        padding: "16px",
-        marginBottom: "12px",
-        borderLeft: `5px solid ${pendencia ? "#ef4444" : "#4fd1c5"}`,
-        backgroundColor: pendencia ? "#fff5f5" : "#fff",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        transition: "transform 0.2s"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-          {pendencia && <AlertCircle size={18} color="#ef4444" strokeWidth={2.5} />}
-          <span style={{ fontSize: "16px", fontWeight: "700", color: pendencia ? "#c53030" : "#1a202c" }}>
-            {s.nome}
-          </span>
-        </div>
-        
-        <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "8px" }}>
-          <strong style={{ color: "#475569" }}>LOCAL:</strong> {s.quadra} — <strong>LOTE:</strong> {s.lote}
-        </div>
-        
-        <div style={{ 
-          fontSize: "12px", 
-          display: "flex", 
-          justifyContent: "space-between",
-          paddingTop: "8px",
-          borderTop: "1px solid rgba(0,0,0,0.04)"
-        }}>
-          <span style={{ color: "#94a3b8" }}>Falecimento: {formatarData(s.data_falecimento)}</span>
-          <span style={{ color: "#1a202c" }}>Idade: <strong>{s.idadeExibicao} anos</strong></span>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <ContainerPagina>
@@ -124,78 +82,83 @@ export default function SepultamentosPorNome() {
           {dados.length} registros
         </div>
       </div>
-<div style={{
-  flex: 1,
-  display: "flex",
-  flexDirection: "column",
-  minHeight: 0,
-  maxHeight: '400px'
-}}>
 
-      <ContainerTabela>
-        {isMobile ? (
-          <div style={{ paddingBottom: "80px" }}>
-            {dados.map(s => <CartaoMobileBusca key={s.id} s={s} />)}
-          </div>
-        ) : (
-          <table className="tabela">
-            <thead>
-              <tr>
-                <th style={{ width: 350 }}>Nome</th>
-                <th>Quadra</th>
-                <th>Lote</th>
-                <th>Gaveta</th>
-                <th>Nascimento</th>
-                <th>Falecimento</th>
-                <th>Sepultamento</th>
-                <th style={{ textAlign: 'center' }}>Idade</th>
-                <th>Funerária</th>
-                <th>Observações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dados.map((s) => {
-                const pendencia = s.obito_entregue === false;
-                const textColor = pendencia ? "#c53030" : "#1e293b";
-                const bgColor = pendencia ? "#fff5f5" : "transparent";
+      <div style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+        height: "100%"
+      }}>
+        <ContainerTabela>
+          {isMobile ? (
+            /* Substituído pelo componente padronizado do Sepultamentos.jsx */
+            <SepultamentoList
+              dados={dados}
+              selecionado={selecionado}
+              onSelecionar={setSelecionado}
+              formatarData={formatarData}
+            />
+          ) : (
+            <table className="tabela">
+              <thead>
+                <tr>
+                  <th style={{ width: 350 }}>Nome</th>
+                  <th>Quadra</th>
+                  <th>Lote</th>
+                  <th>Gaveta</th>
+                  <th>Nascimento</th>
+                  <th>Falecimento</th>
+                  <th>Sepultamento</th>
+                  <th style={{ textAlign: 'center' }}>Idade</th>
+                  <th>Funerária</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dados.map((s) => {
+                  const selecionadoLinha = selecionado?.id === s.id;
+                  const pendencia = s.obito_entregue === false;
+                  
+                  const bgRow = selecionadoLinha ? "#ebf8ff" : (pendencia ? "#fff5f5" : "transparent");
+                  const textColor = selecionadoLinha ? "#2b6cb0" : (pendencia ? "#c53030" : "#1e293b");
 
-                return (
-                  <tr 
-                    key={s.id} 
-                    style={{ 
-                      backgroundColor: bgColor,
-                      color: textColor,
-                      transition: "background 0.2s"
-                    }}
-                    className="linha-tabela"
-                  >
-                    <td style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
-                      {pendencia && <AlertCircle size={16} color="#ef4444" strokeWidth={2.5} />}
-                      {s.nome}
-                    </td>
-                    <td>{s.quadra}</td>
-                    <td>{s.lote}</td>
-                    <td>{s.gaveta || "-"}</td>
-                    <td>{formatarData(s.data_nascimento)}</td>
-                    <td>{formatarData(s.data_falecimento)}</td>
-                    <td>{formatarData(s.data_sepultamento)}</td>
-                    <td style={{ textAlign: 'center' }}>{s.idadeExibicao}</td>
-                    <td>{s.funeraria}</td>
-                    <td style={{ 
-                      fontSize: "11px", 
-                      color: pendencia ? "#c53030" : "#64748b",
-                      opacity: 0.8 
-                    }}>
-                      {s.observacoes}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </ContainerTabela>
- </div>
+                  return (
+                    <tr 
+                      key={s.id} 
+                      onClick={() => setSelecionado(s)}
+                      style={{ 
+                        cursor: "pointer",
+                        backgroundColor: bgRow,
+                        color: textColor,
+                        fontWeight: selecionadoLinha ? "600" : "400",
+                        transition: "all 0.2s ease"
+                      }}
+                      className="linha-tabela"
+                    >
+                      <td style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                        {pendencia && <AlertCircle size={16} color="#ef4444" strokeWidth={2.5} />}
+                        {s.nome}
+                      </td>
+                      <td>{s.quadra}</td>
+                      <td>{s.lote}</td>
+                      <td>{s.gaveta || "-"}</td>
+                      <td>{formatarData(s.data_nascimento)}</td>
+                      <td>{formatarData(s.data_falecimento)}</td>
+                      <td>{formatarData(s.data_sepultamento)}</td>
+                      <td style={{ textAlign: 'center' }}>{s.idade}</td>
+                      <td>{s.funeraria}</td>
+                      <td style={{ fontSize: "11px", opacity: 0.8 }}>
+                        {s.observacoes}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </ContainerTabela>
+      </div>
     </ContainerPagina>
   );
 }

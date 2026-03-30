@@ -31,13 +31,25 @@ body {
     bottom: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: 70px !important;
+
+    /*height: 70px !important;*/
+    /* Aumentamos a altura para acomodar a área segura do iOS */
+    height: calc(65px + env(safe-area-inset-bottom)) !important;
+
     background-color: var(--bg-sidebar) !important;
     border-top: 1px solid #3d4451 !important;
     justify-content: space-around !important;
-    align-items: center !important;
+    
+    /*align-items: center !important;*/
+    align-items: flex-start !important; /* Alinha os ícones no topo do menu */
+
     z-index: 9999 !important;
+    padding-top: 10px !important;      /* Espaço interno superior */
+    
+    /* O padding-bottom garante que os ícones subam acima da barra do iOS */
     padding-bottom: env(safe-area-inset-bottom) !important;
+    z-index: 9999 !important;
+    
   }
 
   .mobile-link {
@@ -99,10 +111,13 @@ margin-left: 0 !important;
 }
 
 /* 3. Ajuste da Tabela para aceitar Sticky */
+
 .tabela-container {
   width: 100%;
   border-collapse: separate !important;
   border-spacing: 0 !important;
+  /* Melhora o deslize do dedo no iOS */
+  -webkit-overflow-scrolling: touch; 
 }
 
 /* 4. Cabeçalho da Tabela (Ex: Nome, Lote, Tipo) */
