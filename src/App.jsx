@@ -19,6 +19,7 @@ import Coveiros from "./pages/Coveiros";
 import Quadras from "./pages/Quadras";
 import Lotes from "./pages/Lotes";
 import Funerarias from "./pages/Funerarias";
+import Usuarios from "./pages/Usuarios";
 import CadastroSepultamento from "./pages/CadastroSepultamento";
 import Exumacoes from "./pages/PainelExumacao";
 import RelatorioExumacoes from "./pages/RelatorioExumacoes";
@@ -123,6 +124,10 @@ export default function App() {
                 } />
                 <Route path="/relatorioexumacoes" element={
                   <ProtectedRoute niveisPermitidos={['master']}><RelatorioExumacoes /></ProtectedRoute>
+                } />
+
+                <Route path="/usuarios" element={
+                  <ProtectedRoute niveisPermitidos={['master']}><Usuarios/></ProtectedRoute>
                 } />
 
                 {/* Redirecionamento padrão para logados */}
