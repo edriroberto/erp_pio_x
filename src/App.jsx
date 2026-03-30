@@ -22,7 +22,6 @@ import Funerarias from "./pages/Funerarias";
 import CadastroSepultamento from "./pages/CadastroSepultamento";
 import Exumacoes from "./pages/PainelExumacao";
 import RelatorioExumacoes from "./pages/RelatorioExumacoes";
-import Usuarios from "./pages/Usuarios";
 
 /**
  * COMPONENTE DE PROTEÇÃO DE ROTA
@@ -125,12 +124,6 @@ export default function App() {
                 <Route path="/relatorioexumacoes" element={
                   <ProtectedRoute niveisPermitidos={['master']}><RelatorioExumacoes /></ProtectedRoute>
                 } />
-                <Route path="/usuarios" element={
-                  <ProtectedRoute niveisPermitidos={['master']}>
-                    <Usuarios />
-                  </ProtectedRoute>
-                } /> 
-
 
                 {/* Redirecionamento padrão para logados */}
                 <Route path="*" element={<Navigate to="/" replace />} />
