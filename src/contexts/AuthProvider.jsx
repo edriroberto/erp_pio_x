@@ -20,52 +20,48 @@ export const AuthProvider = ({ children }) => {
 
   // 🔹 Carrega perfil
   const carregarPerfil = useCallback(async (user) => {
-    if (!user) {
-      if (isMounted.current) {
-        setPerfil(null);
-        setLoading(false);
-      }
+  if (!user) {
+    setPerfil(null);
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("perfis")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    // 🔥 BLOQUEIO REAL
+    if (data && data.ativo === false) {
+      console.warn("Usuário bloqueado!");
+
+      await supabase.auth.signOut();
+
+      setPerfil(null);
+      setLoading(false);
+
       return;
     }
 
-    try {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Auth: carregando perfil:", user.email);
+    setPerfil(
+      data || {
+        id: user.id,
+        email: user.email,
+        nivel: "consulta"
       }
+    );
+  } catch (error) {
+    console.error("Auth erro:", error.message);
 
-      const { data, error } = await supabase
-        .from("perfis")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!isMounted.current) return;
-
-      setPerfil(
-        data || {
-          id: user.id,
-          email: user.email,
-          nivel: "consulta"
-        }
-      );
-    } catch (error) {
-      console.error("Auth erro:", error.message);
-
-      if (isMounted.current) {
-        setPerfil({
-          id: user.id,
-          email: user.email,
-          nivel: "visitante"
-        });
-      }
-    } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+    setPerfil(null);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     isMounted.current = true;

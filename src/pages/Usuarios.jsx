@@ -1,211 +1,381 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
-import { UserPlus, Shield, Mail, Lock, Loader2, Trash2, Users, AlertCircle } from "lucide-react";
+import {
+  UserPlus,
+  Loader2,
+  ShieldOff,
+  ShieldCheck,
+  Users,
+  AlertCircle
+} from "lucide-react";
 import ContainerPagina from "../components/ContainerPagina";
+import { formatarNome, getIniciais } from "../utils/user";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingLista, setLoadingLista] = useState(true);
-  const [msg, setMsg] = useState({ tipo: "", texto: "" });
-  
+  const [msg, setMsg] = useState({});
+
   const [formData, setFormData] = useState({
+    nome: "",
     email: "",
     password: "",
     nivel: "consulta"
   });
 
-  // 1. BUSCAR TODOS OS USUÁRIOS NA TABELA 'PERFIS'
+  // 🔹 Buscar usuários
   const buscarUsuarios = async () => {
     setLoadingLista(true);
-    try {
-      const { data, error } = await supabase
-        .from("perfis")
-        .select("*")
-        .order("email", { ascending: true });
 
-      if (error) throw error;
-      setUsuarios(data);
-    } catch (error) {
-      console.error("Erro ao carregar lista:", error.message);
-    } finally {
-      setLoadingLista(false);
-    }
+    const { data, error } = await supabase
+      .from("perfis")
+      .select("*")
+      .order("email");
+
+    if (!error) setUsuarios(data);
+    else console.error(error.message);
+
+    setLoadingLista(false);
   };
 
   useEffect(() => {
     buscarUsuarios();
   }, []);
 
-  // 2. CADASTRAR NOVO (COM TRATAMENTO DE USUÁRIO SIMPLES)
+  // 🔹 Criar usuário
   const handleCadastro = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg({ tipo: "", texto: "" });
+    setMsg({});
 
-    // Se o usuário digitar apenas "joao", vira "joao@sistema.com"
-    const emailFinal = formData.email.includes("@") 
-      ? formData.email.trim().toLowerCase() 
+    const emailFinal = formData.email.includes("@")
+      ? formData.email.trim().toLowerCase()
       : `${formData.email.trim().toLowerCase()}@sistema.com`;
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: emailFinal,
-        password: formData.password,
+        password: formData.password
       });
 
-      if (authError) throw authError;
+      if (error) throw error;
 
-      if (authData.user) {
-        // Atualiza o perfil (o trigger já criou, mas garantimos o nível aqui)
-        const { error: perfilError } = await supabase
-          .from("perfis")
-          .update({ nivel: formData.nivel, email: emailFinal })
-          .eq("id", authData.user.id);
+      await supabase
+        .from("perfis")
+        .update({
+          nome: formData.nome,
+          email: emailFinal,
+          nivel: formData.nivel,
+          ativo: true
+        })
+        .eq("id", data.user.id);
 
-        if (perfilError) throw perfilError;
-        
-        setMsg({ tipo: "sucesso", texto: `Acesso criado para: ${emailFinal}` });
-        setFormData({ email: "", password: "", nivel: "consulta" });
-        buscarUsuarios(); // Atualiza a tabela abaixo
-      }
-    } catch (error) {
-      setMsg({ tipo: "erro", texto: error.message });
-    } finally {
-      setLoading(false);
+      setMsg({ tipo: "ok", texto: "Usuário criado com sucesso" });
+
+      setFormData({
+        nome: "",
+        email: "",
+        password: "",
+        nivel: "consulta"
+      });
+
+      buscarUsuarios();
+
+    } catch (err) {
+      setMsg({ tipo: "erro", texto: err.message });
     }
+
+    setLoading(false);
   };
 
-  // 3. EXCLUIR/BLOQUEAR USUÁRIO
-  const handleExcluir = async (id, email) => {
-    if (window.confirm(`Tem certeza que deseja remover o acesso de ${email}?`)) {
-      try {
-        const { error } = await supabase.from("perfis").delete().eq("id", id);
-        if (error) throw error;
-        
-        setUsuarios(usuarios.filter(u => u.id !== id));
-        alert("Acesso removido com sucesso!");
-      } catch (error) {
-        alert("Erro ao excluir: " + error.message);
-      }
+  // 🔹 Bloquear / desbloquear
+  const toggleAtivo = async (user) => {
+    if (user.nivel === "master") {
+      alert("Não é permitido bloquear um usuário master");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("perfis")
+      .update({ ativo: !user.ativo })
+      .eq("id", user.id);
+
+    if (!error) {
+      setUsuarios((prev) =>
+        prev.map((u) =>
+          u.id === user.id ? { ...u, ativo: !u.ativo } : u
+        )
+      );
     }
   };
 
   return (
-    <ContainerPagina>
+    <ContainerPagina style={{ marginBottom: '30px' }}>
+      {/* HEADER */}
+      
       <div style={styles.header}>
-        <Users size={28} color="#4fd1c5" />
-        <h2 style={{ margin: 0 }}>Gestão de Utilizadores e Acessos</h2>
+        <Users size={24} />
+        <h2>Gestão de Utilizadores</h2>
       </div>
 
       <div style={styles.grid}>
-        {/* LADO ESQUERDO: FORMULÁRIO */}
+
+        {/* FORM */}
         <div style={styles.card}>
-          <h3 style={styles.subtitulo}><UserPlus size={18} /> Novo Acesso</h3>
+          <h3 style={styles.title}>
+            <UserPlus size={16} /> Novo Utilizador
+          </h3>
+
           <form onSubmit={handleCadastro} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Nome de Utilizador ou E-mail</label>
-              <input
-                type="text"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                placeholder="Ex: joao ou joao@cemiterio.com"
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Senha Provisória</label>
-              <input
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Nível de Permissão</label>
-              <select 
-                value={formData.nivel}
-                onChange={(e) => setFormData({...formData, nivel: e.target.value})}
-                style={styles.input}
-              >
-                <option value="consulta">Apenas Consulta</option>
-                <option value="admin">Administrador</option>
-                <option value="master">Master (Total)</option>
-              </select>
-            </div>
-            <button type="submit" disabled={loading} style={styles.btn}>
-              {loading ? <Loader2 className="animate-spin" /> : "Criar Utilizador"}
+            <input
+              placeholder="Nome completo"
+              value={formData.nome}
+              onChange={(e) =>
+                setFormData({ ...formData, nome: e.target.value })
+              }
+              style={styles.input}
+              required
+            />
+
+            <input
+              placeholder="Email ou nome"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              style={styles.input}
+              required
+            />
+
+            <input
+              type="password"
+              placeholder="Senha"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              style={styles.input}
+              required
+            />
+
+            <select
+              value={formData.nivel}
+              onChange={(e) =>
+                setFormData({ ...formData, nivel: e.target.value })
+              }
+              style={styles.input}
+            >
+              <option value="consulta">Consulta</option>
+              <option value="admin">Admin</option>
+              <option value="master">Master</option>
+            </select>
+
+            <button disabled={loading} style={styles.btn}>
+              {loading ? <Loader2 className="animate-spin" /> : "Criar"}
             </button>
+
             {msg.texto && (
-              <div style={{...styles.alerta, color: msg.tipo === 'erro' ? '#c53030' : '#2f855a'}}>
-                <AlertCircle size={14} /> {msg.texto}
+              <div style={{
+                ...styles.msg,
+                color: msg.tipo === "erro" ? "#dc2626" : "#16a34a"
+              }}>
+                <AlertCircle size={14} />
+                {msg.texto}
               </div>
             )}
           </form>
         </div>
 
-        {/* LADO DIREITO: LISTAGEM */}
+        {/* LISTA */}
         <div style={styles.card}>
-          <h3 style={styles.subtitulo}>Utilizadores Ativos</h3>
-          {loadingLista ? <div style={{textAlign:'center', padding: '20px'}}><Loader2 className="animate-spin" /></div> : (
-            <div style={styles.tabelaContainer}>
-              <table style={styles.tabela}>
-                <thead>
-                  <tr style={styles.trHead}>
-                    <th style={styles.th}>Utilizador</th>
-                    <th style={styles.th}>Nível</th>
-                    <th style={styles.th}>Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usuarios.map(u => (
-                    <tr key={u.id} style={styles.trBody}>
-                      <td style={styles.td}>{u.email}</td>
-                      <td style={styles.td}>
-                        <span style={{
-                          ...styles.badge, 
-                          backgroundColor: u.nivel === 'master' ? '#fed7d7' : '#e6fffa',
-                          color: u.nivel === 'master' ? '#c53030' : '#2c7a7b'
-                        }}>
-                          {u.nivel}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <button onClick={() => handleExcluir(u.id, u.email)} style={styles.btnExcluir}>
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <h3 style={styles.title}>Utilizadores</h3>
+
+          {loadingLista ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <div style={styles.listaContainer}>
+              {usuarios.map((u) => {
+                const nome = formatarNome(u.nome, u.email);
+                const iniciais = getIniciais(u.nome, u.email);
+
+                return (
+                  <div key={u.id} style={styles.userRow} className="user-row">
+
+                    <div style={styles.userInfo}>
+                      <div style={styles.avatar}>{iniciais}</div>
+
+                      <div>
+                        <div style={styles.nome}>{nome}</div>
+                        <div style={styles.email}>{u.email}</div>
+                      </div>
+                    </div>
+
+                    <div style={styles.actions} className="actions">
+                      <span style={{
+                        ...styles.badge,
+                        background: u.ativo ? "#ecfdf5" : "#fef2f2",
+                        color: u.ativo ? "#065f46" : "#991b1b"
+                      }}>
+                        {u.ativo ? "Ativo" : "Bloqueado"}
+                      </span>
+
+                      <span style={styles.level}>{u.nivel}</span>
+
+                      <button
+                        onClick={() => toggleAtivo(u)}
+                        style={styles.toggle}
+                      >
+                        {u.ativo ? <ShieldOff size={16} /> : <ShieldCheck size={16} />}
+                      </button>
+                    </div>
+
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
+
       </div>
     </ContainerPagina>
   );
 }
 
 const styles = {
-  header: { display: "flex", alignItems: "center", gap: "12px", marginBottom: "25px" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "25px" },
-  card: { background: "#fff", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" },
-  subtitulo: { margin: "0 0 20px 0", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid #eee", paddingBottom: "10px" },
-  form: { display: "flex", flexDirection: "column", gap: "18px" },
-  inputGroup: { display: "flex", flexDirection: "column", gap: "6px" },
-  label: { fontSize: "13px", fontWeight: "600", color: "#64748b" },
-  input: { padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "14px" },
-  btn: { padding: "14px", background: "#4fd1c5", color: "#fff", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" },
-  tabelaContainer: { overflowX: "auto" },
-  tabela: { width: "100%", borderCollapse: "collapse" },
-  trHead: { borderBottom: "2px solid #f1f5f9" },
-  th: { textAlign: "left", padding: "12px", color: "#64748b", fontSize: "13px" },
-  td: { padding: "12px", borderBottom: "1px solid #f1f5f9", fontSize: "14px", color: "#1e293b" },
-  badge: { padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "bold", textTransform: "uppercase" },
-  btnExcluir: { background: "none", border: "none", color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center" },
-  alerta: { display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", marginTop: "10px", fontWeight: "500" }
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "20px"
+  },
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gap: "20px"
+  },
+
+  card: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "12px",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.04)"
+  },
+
+  title: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "15px"
+  },
+
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px"
+  },
+
+  input: {
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #e5e7eb"
+  },
+
+  btn: {
+    background: "#2563eb",
+    color: "#fff",
+    padding: "10px",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer"
+  },
+
+  msg: {
+    display: "flex",
+    gap: "6px",
+    fontSize: "13px"
+  },
+
+  listaContainer: {
+  //maxHeight: "none",
+  maxHeight: "52vh",
+  overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+  paddingRight: "6px",
+
+  marginBottom: "20px", // 🔥 ESSA LINHA resolve
+
+  maskImage: undefined
+    //"linear-gradient(to bottom, transparent, black 10px, black 85%, transparent)"
+},
+
+  userRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px",
+    borderRadius: "10px",
+    transition: "all 0.2s ease"
+  },
+
+  userInfo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  },
+
+  avatar: {
+    width: "34px",
+    height: "34px",
+    borderRadius: "50%",
+    background: "#4f46e5",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "12px",
+    fontWeight: "600"
+  },
+
+  nome: {
+    fontSize: "14px",
+    fontWeight: "600"
+  },
+
+  email: {
+    fontSize: "12px",
+    color: "#6b7280"
+  },
+
+  actions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    opacity: 0.4,
+    transition: "opacity 0.2s"
+  },
+
+  badge: {
+    padding: "4px 10px",
+    borderRadius: "999px",
+    fontSize: "11px",
+    fontWeight: "600"
+  },
+
+  level: {
+    fontSize: "11px",
+    color: "#6b7280",
+    textTransform: "uppercase"
+  },
+
+  toggle: {
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
+    borderRadius: "6px",
+    padding: "6px",
+    cursor: "pointer"
+  }
 };
