@@ -126,8 +126,8 @@ export default function Sepultamentos() {
         <div style={{ 
           flex: isMobile ? "none" : 1, 
           maxWidth: isMobile ? "100%" : "500px",
-          marginBottom: "-10px",
-          marginTop: "-5px"
+          //marginBottom: "-10px",
+          //marginTop: "-5px"
         }}>
           <SepultamentoSearchBar onBuscar={setFiltro} />
         </div>

@@ -1,44 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, X } from "lucide-react";
 
 export default function SepultamentoSearchBar({ onBuscar }) {
   const [texto, setTexto] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
+  // 🔹 debounce (evita flood no banco)
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      onBuscar?.(texto);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [texto, onBuscar]);
+
   function handleChange(e) {
-    const valor = e.target.value.toUpperCase();
-    setTexto(valor);
-    if (onBuscar) {
-      onBuscar(valor);
-    }
+    setTexto(e.target.value.toUpperCase());
   }
 
   function limpar() {
     setTexto("");
-    if (onBuscar) onBuscar("");
+    onBuscar?.("");
   }
 
   return (
-    <div 
+    <div
       style={{
         ...styles.container,
-        borderColor: isFocused ? "#3b82f6" : "#e2e8f0", // Borda azul ao focar
-        boxShadow: isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+        borderColor: isFocused ? "#2563eb" : "#e5e7eb",
+        boxShadow: isFocused
+          ? "0 0 0 3px rgba(37, 99, 235, 0.15)"
+          : "none",
       }}
     >
-      {/* LUPA (ÍCONE MODERNO) */}
-      <Search 
-        size={18} 
-        style={{ 
-          color: isFocused ? "#3b82f6" : "#94a3b8",
-          transition: "color 0.2s" 
-        }} 
+      <Search
+        size={18}
+        style={{
+          color: isFocused ? "#2563eb" : "#9ca3af",
+        }}
       />
 
-      {/* INPUT */}
       <input
         type="text"
-        placeholder="BUSCAR NOME / QUADRA / LOTE / FUNERÁRIA"
+        placeholder="Buscar por nome, quadra, lote ou funerária..."
         value={texto}
         onChange={handleChange}
         onFocus={() => setIsFocused(true)}
@@ -46,14 +50,9 @@ export default function SepultamentoSearchBar({ onBuscar }) {
         style={styles.input}
       />
 
-      {/* BOTÃO LIMPAR (ÍCONE MODERNO) */}
       {texto && (
-        <button
-          onClick={limpar}
-          style={styles.btnClear}
-          title="Limpar busca"
-        >
-          <X size={18} strokeWidth={2.5} />
+        <button onClick={limpar} style={styles.clearBtn}>
+          <X size={16} />
         </button>
       )}
     </div>
@@ -62,38 +61,43 @@ export default function SepultamentoSearchBar({ onBuscar }) {
 
 const styles = {
   container: {
-    marginBottom: "10px",
-    marginTop: "5px",
+    height: "48px",
+    width: "100%",
+    maxWidth: "520px",
+
     background: "#fff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "10px", // Bordas um pouco mais arredondadas (Padrão 2026)
-    padding: "10px 14px",
+    border: "1px solid #e5e7eb",
+    borderRadius: "8px",
+
+    padding: "0 12px",
+    boxSizing: "border-box", // 🔥 ESSENCIAL
+
     display: "flex",
     alignItems: "center",
-    gap: "10px",
-    transition: "all 0.2s ease-in-out",
+    gap: "12px",
+
+    transition: "all 0.2s ease",
+
+    margin: "12px auto", // 🔥 centraliza sem quebrar mobile
   },
+
+
   input: {
     flex: 1,
     border: "none",
     outline: "none",
     fontSize: "14px",
-    fontWeight: "500", // Texto levemente mais encorpado
     background: "transparent",
-    textTransform: "uppercase",
-    color: "#1e293b", // Slate 800 para melhor leitura
-    letterSpacing: "0.3px",
+    color: "#111827",
   },
-  btnClear: {
+
+  clearBtn: {
     border: "none",
-    background: "#f1f5f9", // Fundo cinza sutil no botão de fechar
-    color: "#64748b",
+    background: "transparent",
     cursor: "pointer",
-    padding: "4px",
-    borderRadius: "50%", // Botão circular
+    color: "#9ca3af",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    transition: "background 0.2s",
-  }
+  },
 };
