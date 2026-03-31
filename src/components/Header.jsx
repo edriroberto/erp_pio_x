@@ -1,49 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { LogOut, User } from "lucide-react";
+import { AuthContext } from "../contexts/AuthProvider"; // 🔥 IMPORTANTE
+import { formatarNome, getIniciais } from "../utils/user"; // 🔥 utils correto
 
 export default function Header() {
-  const [user, setUser] = useState(null);
+  const { perfil } = useContext(AuthContext); // 🔥 agora sim correto
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  // 🔹 Resize responsivo
   useEffect(() => {
-    // Sessão inicial
-
-    // Listener auth
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Resize
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
 
-    return () => {
-      listener?.subscription?.unsubscribe();
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 🔹 Nome amigável
-  function formatarNome(email) {
-    if (!email) return "Usuário";
-    const nome = email.split("@")[0];
-    return nome.charAt(0).toUpperCase() + nome.slice(1);
-  }
-
-  // 🔹 Iniciais
-  function getIniciais(email) {
-    if (!email) return "U";
-    return email.substring(0, 2).toUpperCase();
-  }
-
-  // 🔹 Logout
+  // 🔹 Logout seguro
   async function handleLogout() {
-    
     await supabase.auth.signOut();
-setUser(null);
+    window.location.reload(); // 🔥 evita bug de sessão travada
   }
+
+  // 🔹 Dados formatados
+  const nome = formatarNome(perfil?.nome, perfil?.email);
+  const iniciais = getIniciais(perfil?.nome, perfil?.email);
 
   return (
     <div style={styles.header}>
@@ -54,19 +36,19 @@ setUser(null);
       </div>
 
       {/* DIREITA */}
-      {user && (
+      {perfil && (
         <div style={styles.right}>
 
-          {/* USUÁRIO */}
+          {/* USER */}
           <div style={styles.user} onClick={() => setOpen(!open)}>
             
             <div style={styles.avatar}>
-              {getIniciais(user.email)}
+              {iniciais}
             </div>
 
             {!isMobile && (
               <span style={styles.nome}>
-                {formatarNome(user.email)}
+                {nome}
               </span>
             )}
           </div>
@@ -88,6 +70,7 @@ setUser(null);
     </div>
   );
 }
+
 const styles = {
   header: {
     height: "60px",
