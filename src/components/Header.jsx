@@ -123,7 +123,7 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     fontWeight: "600",
-    fontSize: "14px",
+    fontSize: "20px",
     color: "#111827"
   },
 
