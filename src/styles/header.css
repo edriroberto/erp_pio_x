@@ -1,0 +1,70 @@
+/* Botão hamburger */
+.hamburger-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 2100; /* acima do header */
+  background: #f0fdf4; /* fundo verde da paleta Jardim */
+  color: #065f46;      /* cor do ícone */
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+/* Menu lateral */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: -250px; /* escondido por padrão */
+  width: 250px;
+  height: 100vh;
+  background: #f0fdf4; /* fundo verde da paleta Jardim */
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  transition: left 0.3s ease;
+  z-index: 2000;
+}
+
+.mobile-menu.open {
+  left: 0;
+}
+
+.mobile-menu h3 {
+  margin-bottom: 20px;
+  color: #065f46; /* título usando cor verde acentuada */
+}
+
+.mobile-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-menu li {
+  margin-bottom: 15px;
+}
+
+.mobile-menu li a {
+  text-decoration: none;
+  color: #065f46; /* cor verde acentuada */
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: block;
+}
+
+.mobile-menu li a:hover {
+  background: #f0f4f2; /* amarelo da paleta Jardim */
+}
+
+/* Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1990;
+}

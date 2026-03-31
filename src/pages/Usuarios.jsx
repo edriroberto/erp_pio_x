@@ -247,7 +247,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    marginBottom: "20px"
+    marginBottom: "20px",
+    color: "#065f46"
   },
 
   grid: {
@@ -257,17 +258,19 @@ const styles = {
   },
 
   card: {
-    background: "#fff",
+    background: "#ffffff",
     padding: "20px",
     borderRadius: "12px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.04)"
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.03)"
   },
 
   title: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    marginBottom: "15px"
+    marginBottom: "15px",
+    color: "#065f46"
   },
 
   form: {
@@ -279,16 +282,20 @@ const styles = {
   input: {
     padding: "10px",
     borderRadius: "8px",
-    border: "1px solid #e5e7eb"
+    border: "1px solid #e5e7eb",
+    background: "#f9fafb",
+    outline: "none"
   },
 
   btn: {
-    background: "#2563eb",
+    background: "#065f46",
     color: "#fff",
     padding: "10px",
     border: "none",
     borderRadius: "8px",
-    cursor: "pointer"
+    cursor: "pointer",
+    fontWeight: "600",
+    transition: "0.2s"
   },
 
   msg: {
@@ -298,19 +305,14 @@ const styles = {
   },
 
   listaContainer: {
-  //maxHeight: "none",
-  maxHeight: "52vh",
-  overflowY: "auto",
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-  paddingRight: "6px",
-
-  marginBottom: "20px", // 🔥 ESSA LINHA resolve
-
-  maskImage: undefined
-    //"linear-gradient(to bottom, transparent, black 10px, black 85%, transparent)"
-},
+    maxHeight: "52vh",
+    overflowY: "auto",
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    paddingRight: "6px",
+    marginBottom: "20px"
+  },
 
   userRow: {
     display: "flex",
@@ -318,6 +320,8 @@ const styles = {
     alignItems: "center",
     padding: "12px",
     borderRadius: "10px",
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
     transition: "all 0.2s ease"
   },
 
@@ -331,7 +335,7 @@ const styles = {
     width: "34px",
     height: "34px",
     borderRadius: "50%",
-    background: "#4f46e5",
+    background: "#065f46",
     color: "#fff",
     display: "flex",
     alignItems: "center",
@@ -342,7 +346,8 @@ const styles = {
 
   nome: {
     fontSize: "14px",
-    fontWeight: "600"
+    fontWeight: "600",
+    color: "#111827"
   },
 
   email: {
@@ -354,7 +359,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    opacity: 0.4,
+    opacity: 0.6,
     transition: "opacity 0.2s"
   },
 
@@ -372,10 +377,11 @@ const styles = {
   },
 
   toggle: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: "6px",
     padding: "6px",
-    cursor: "pointer"
+    cursor: "pointer",
+    transition: "0.2s"
   }
 };

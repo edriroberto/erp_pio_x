@@ -116,26 +116,28 @@ export default function Sidebar() {
   return (
     <aside style={styles.sidebar}>
       <div style={styles.logo}>
-        <div style={styles.logoIcon}>P</div>
-        <span>ERP Jardim</span>
+        <div style={styles.logoIcon}>🏛️</div>
+         <div style={styles.logo}>
+        Gestão
+      </div>
       </div>
       
       <div style={styles.userInfo}>
-        <div style={{
-          padding: '4px 8px',
-          borderRadius: '4px',
-          background: perfil?.nivel === 'master' ? '#70a1ff22' : '#2f3542',
-          color: perfil?.nivel === 'master' ? '#70a1ff' : '#a0aec0',
-          fontSize: '10px',
-          fontWeight: 'bold',
-          textTransform: 'uppercase'
-        }}>
-          {perfil?.nivel || 'Visitante'}
-        </div>
-        <span style={{ fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {perfil?.email?.split('@')[0]}
-        </span>
-      </div>
+      
+      {/* 🔹 NOME DO USUÁRIO */}
+      <span style={styles.userName}>
+        {perfil?.nome || perfil?.email?.split("@")[0]}
+      </span>
+
+      {/* 🔹 NÍVEL */}
+       <span style={styles.userLevel}>
+        {perfil?.nivel || "visitante"}
+      </span>
+
+      
+      
+
+    </div>
 
       <nav style={styles.desktopNav}>
         {linksPermitidos.map((link) => {
@@ -208,42 +210,49 @@ const styles = {
     display: "flex", 
     flexDirection: "column", 
     alignItems: "center",
-    color: "#ff7675",
+    color: "#d3cfcf",
     fontSize: "9px",
     gap: "5px",
     flex: 1
   },
+
   sidebar: {
     width: 260,
     height: "100vh",
     display: "flex",
     flexDirection: "column",
-    padding: "25px 15px",
-    background: "#1a202c",
+    padding: "5px 15px",
+    background: "#0b1f17", // 🔥 verde quase preto
     color: "#fff",
     boxSizing: "border-box",
     borderRight: "1px solid #2d3748"
   },
+
   logo: {
-    display: "flex",
+    color: "#b1f0d3",
+    fontSize: "20px",
     alignItems: "center",
-    gap: "10px",
-    fontSize: "16px",
-    fontWeight: "800",
-    marginBottom: "30px",
-    color: "#4fd1c5"
+    display: "flex",
+    justifyContent: "center", // 🔥 centraliza horizontal
+    alignItems: "center",     // 🔥 centraliza vertical
+
+    whiteSpace: "nowrap",
+    width: "60%",
+  //  marginBottom: "20px"
+
+  
   },
+
   logoIcon: {
-    background: "#4fd1c5",
-    color: "#1a202c",
-    width: "30px",
-    height: "30px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "6px",
-    fontWeight: "bold"
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "24px",
+  width: "40px",
+  height: "40px",
+  borderRadius: "6px"
   },
+
   userInfo: {
     marginBottom: "25px",
     display: "flex",
@@ -273,8 +282,8 @@ const styles = {
   logoutButton: {
     padding: "12px",
     background: "rgba(234, 67, 53, 0.1)",
-    color: "#ea4335",
-    border: "1px solid rgba(234, 67, 53, 0.2)",
+    color: "#f8f8f8",
+    border: "1px solid rgba(199, 197, 196, 0.2)",
     borderRadius: "8px",
     cursor: "pointer",
     marginTop: "20px",
@@ -283,5 +292,21 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: "10px",
-  }
+  },
+  userName: {
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "#ecfdf5", // 🔥 branco esverdeado
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap"
+},
+
+userLevel: {
+  fontSize: "10px",           // 🔥 pequeno
+  color: "#dde0de",           // verde suave (não grita)
+  opacity: 0.7,               // 🔥 discreto
+  textTransform: "capitalize",// master → Master
+  letterSpacing: "0.5px"
+},
 };
