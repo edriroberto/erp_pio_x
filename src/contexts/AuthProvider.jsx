@@ -3,8 +3,8 @@ import React, {
   useEffect,
   useState,
   useCallback,
-  useRef,
-  useMemo
+  useMemo,
+  useRef
 } from "react";
 import { supabase } from "../utils/supabaseClient";
 
@@ -14,13 +14,11 @@ export const AuthProvider = ({ children }) => {
   const [perfil, setPerfil] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isInitialLoad = useRef(true); // Controle para o primeiro carregamento
 
-  const isMounted = useRef(true);
-
-  // 🔥 CARREGAR PERFIL (SEM depender de state)
+  // 🔥 BUSCA PERFIL (Melhorado com tratamento de erro)
   const carregarPerfil = useCallback(async (usuario) => {
-    if (!usuario?.id) return;
-
+    if (!usuario?.id) return null;
     try {
       const { data, error } = await supabase
         .from("perfis")
@@ -30,119 +28,103 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // 🔒 usuário inativo
       if (data && data.ativo === false) {
         await supabase.auth.signOut();
-        setPerfil(null);
-        setUser(null);
-        return;
+        return null;
       }
 
-      setPerfil(
-        data || {
-          id: usuario.id,
-          email: usuario.email,
-          nivel: "consulta"
-        }
-      );
-    } catch (error) {
-      console.error("Erro ao carregar perfil:", error.message);
+      return data || {
+        id: usuario.id,
+        email: usuario.email,
+        nivel: "consulta"
+      };
+    } catch (err) {
+      console.error("Erro ao carregar perfil:", err.message);
+      return null;
     }
   }, []);
 
-  // 🔥 REFRESH SEGURO (usado pelo Avatar)
+  // 🔥 REFRESH MANUAL
   const refreshPerfil = useCallback(async () => {
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
-
-    const currentUser = session?.user;
-
-    if (currentUser) {
-      setUser(currentUser);
-      await carregarPerfil(currentUser);
-    }
-  }, [carregarPerfil]);
+    if (!user) return;
+    const perfilData = await carregarPerfil(user);
+    setPerfil(perfilData);
+  }, [user, carregarPerfil]);
 
   useEffect(() => {
-    isMounted.current = true;
+    let mounted = true;
 
-    // 🔥 INICIALIZAÇÃO (resolve F5)
-    const inicializar = async () => {
+    const iniciarSessao = async () => {
       try {
-        const {
-          data: { session }
-        } = await supabase.auth.getSession();
-
+        // 1. Tenta pegar a sessão atual imediatamente (importante para o F5)
+        const { data: { session } } = await supabase.auth.getSession();
         const currentUser = session?.user || null;
 
-        setUser(currentUser);
-
-        if (currentUser) {
-          await carregarPerfil(currentUser);
+        if (mounted) {
+          setUser(currentUser);
+          if (currentUser) {
+            const perfilData = await carregarPerfil(currentUser);
+            setPerfil(perfilData);
+          }
         }
-      } catch (e) {
-        console.error("Erro inicialização:", e);
+      } catch (error) {
+        console.error("Falha na inicialização:", error);
       } finally {
-        if (isMounted.current) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          isInitialLoad.current = false;
+        }
       }
     };
 
-    inicializar();
+    iniciarSessao();
 
-    // 🔥 LISTENER GLOBAL DE AUTH
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // 🔥 LISTENER DE AUTH (Gerencia Login/Logout/Token Refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Ignora o evento inicial se já carregamos via iniciarSessao para evitar flicker
+      if (isInitialLoad.current) return;
+
       const currentUser = session?.user || null;
+      setUser(currentUser);
 
-      console.log("Auth event:", event);
-
-      if (
-        event === "SIGNED_IN" ||
-        event === "TOKEN_REFRESHED" ||
-        event === "INITIAL_SESSION"
-      ) {
-        setUser(currentUser);
-
-        if (currentUser) {
-          await carregarPerfil(currentUser);
-        }
-      }
-
-      if (event === "SIGNED_OUT") {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        const perfilData = await carregarPerfil(currentUser);
+        setPerfil(perfilData);
+      } else if (event === "SIGNED_OUT") {
         setPerfil(null);
         setUser(null);
       }
-
-      if (isMounted.current) setLoading(false);
     });
 
     return () => {
-      isMounted.current = false;
+      mounted = false;
       subscription?.unsubscribe();
     };
   }, [carregarPerfil]);
 
-  // 🔥 MEMO (performance)
-  const value = useMemo(
-    () => ({
-      user,
-      perfil,
-      loading,
-      refreshPerfil,
-      authenticated: !!perfil?.id,
-      isAdmin: ["admin", "master"].includes(perfil?.nivel),
-      isMaster: perfil?.nivel === "master"
-    }),
-    [perfil, loading, user, refreshPerfil]
-  );
+  const value = useMemo(() => ({
+    user,
+    perfil,
+    loading,
+    refreshPerfil,
+    authenticated: !!perfil?.id,
+    isAdmin: ["admin", "master"].includes(perfil?.nivel),
+    isMaster: perfil?.nivel === "master"
+  }), [user, perfil, loading, refreshPerfil]);
 
-  // 🔥 LOADING GLOBAL
+  // Se estiver carregando, mostra o splash screen
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
-        Carregando sessão...
+        <div style={styles.loaderBox}>
+           <span>Carregando sessão...</span>
+           {/* Fallback caso demore demais */}
+           <button 
+             onClick={() => window.location.reload()} 
+             style={styles.retryBtn}>
+             Recarregar se travar
+           </button>
+        </div>
       </div>
     );
   }
@@ -158,10 +140,27 @@ const styles = {
   loadingContainer: {
     display: "flex",
     height: "100dvh",
+    width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    fontSize: "14px",
+    background: "#f9fafb"
+  },
+  loaderBox: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "12px",
     color: "#666",
     fontFamily: "sans-serif"
+  },
+  retryBtn: {
+    marginTop: "10px",
+    fontSize: "11px",
+    background: "none",
+    border: "1px solid #ddd",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    cursor: "pointer",
+    color: "#999"
   }
 };
