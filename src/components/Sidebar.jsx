@@ -163,7 +163,7 @@ export default function Sidebar() {
 
       <button onClick={handleLogout} style={styles.logoutButton}>
         <LogOut size={18} />
-        Encerrar Sessão
+        Sair do Sistema
       </button>
     </aside>
   );

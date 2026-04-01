@@ -12,157 +12,136 @@ export const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
   const [perfil, setPerfil] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const isMounted = useRef(true);
-  const lastUserId = useRef(null); // 🔥 controle de loop
-  const timeoutRef = useRef(null);
 
-  // 🔹 Carrega perfil
-  const carregarPerfil = useCallback(async (user) => {
-  if (!user) {
-    setPerfil(null);
-    setLoading(false);
-    return;
-  }
+  // 🔥 CARREGAR PERFIL (SEM depender de state)
+  const carregarPerfil = useCallback(async (usuario) => {
+    if (!usuario?.id) return;
 
-  try {
-    const { data, error } = await supabase
-      .from("perfis")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("perfis")
+        .select("*")
+        .eq("id", usuario.id)
+        .maybeSingle();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // 🔥 BLOQUEIO REAL
-    if (data && data.ativo === false) {
-      console.warn("Usuário bloqueado!");
-
-      await supabase.auth.signOut();
-
-      setPerfil(null);
-      setLoading(false);
-
-      return;
-    }
-
-    setPerfil(
-      data || {
-        id: user.id,
-        email: user.email,
-        nivel: "consulta"
+      // 🔒 usuário inativo
+      if (data && data.ativo === false) {
+        await supabase.auth.signOut();
+        setPerfil(null);
+        setUser(null);
+        return;
       }
-    );
-  } catch (error) {
-    console.error("Auth erro:", error.message);
 
-    setPerfil(null);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+      setPerfil(
+        data || {
+          id: usuario.id,
+          email: usuario.email,
+          nivel: "consulta"
+        }
+      );
+    } catch (error) {
+      console.error("Erro ao carregar perfil:", error.message);
+    }
+  }, []);
+
+  // 🔥 REFRESH SEGURO (usado pelo Avatar)
+  const refreshPerfil = useCallback(async () => {
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+
+    const currentUser = session?.user;
+
+    if (currentUser) {
+      setUser(currentUser);
+      await carregarPerfil(currentUser);
+    }
+  }, [carregarPerfil]);
 
   useEffect(() => {
     isMounted.current = true;
 
-    // 🔹 fallback anti-travamento (FORÇA logout se travar)
-    timeoutRef.current = setTimeout(() => {
-      if (loading) {
-        console.warn("Sessão travou → forçando logout");
-
-        supabase.auth.signOut();
-        window.location.reload();
-      }
-    }, 7000);
-
-    // 🔹 INIT
-    const init = async () => {
+    // 🔥 INICIALIZAÇÃO (resolve F5)
+    const inicializar = async () => {
       try {
         const {
           data: { session }
         } = await supabase.auth.getSession();
 
-        const user = session?.user;
+        const currentUser = session?.user || null;
 
-        if (user) {
-          lastUserId.current = user.id;
-          await carregarPerfil(user);
-        } else {
-          setPerfil(null);
-          setLoading(false);
+        setUser(currentUser);
+
+        if (currentUser) {
+          await carregarPerfil(currentUser);
         }
-      } catch (error) {
-        console.error("Erro init:", error.message);
-        setLoading(false);
+      } catch (e) {
+        console.error("Erro inicialização:", e);
+      } finally {
+        if (isMounted.current) setLoading(false);
       }
     };
 
-    init();
+    inicializar();
 
-    // 🔹 LISTENER BLINDADO
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!isMounted.current) return;
+    // 🔥 LISTENER GLOBAL DE AUTH
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const currentUser = session?.user || null;
 
-        const user = session?.user;
+      console.log("Auth event:", event);
 
-        if (process.env.NODE_ENV === "development") {
-          console.log("Auth event:", event);
-        }
+      if (
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "INITIAL_SESSION"
+      ) {
+        setUser(currentUser);
 
-        // 🔥 BLOQUEIA LOOP AO TROCAR ABA
-        if (user?.id === lastUserId.current && event !== "SIGNED_OUT") {
-          return;
-        }
-
-        lastUserId.current = user?.id || null;
-
-        if (user) {
-          setLoading(true);
-          await carregarPerfil(user);
-        } else {
-          setPerfil(null);
-          setLoading(false);
+        if (currentUser) {
+          await carregarPerfil(currentUser);
         }
       }
-    );
+
+      if (event === "SIGNED_OUT") {
+        setPerfil(null);
+        setUser(null);
+      }
+
+      if (isMounted.current) setLoading(false);
+    });
 
     return () => {
       isMounted.current = false;
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      listener?.subscription?.unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, [carregarPerfil, loading]);
+  }, [carregarPerfil]);
 
-  // 🔹 Memo
-  const value = useMemo(() => {
-    return {
+  // 🔥 MEMO (performance)
+  const value = useMemo(
+    () => ({
+      user,
       perfil,
       loading,
+      refreshPerfil,
       authenticated: !!perfil?.id,
       isAdmin: ["admin", "master"].includes(perfil?.nivel),
       isMaster: perfil?.nivel === "master"
-    };
-  }, [perfil, loading]);
+    }),
+    [perfil, loading, user, refreshPerfil]
+  );
 
-  // 🔹 Loading global
+  // 🔥 LOADING GLOBAL
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          height: "100dvh",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: "14px",
-          color: "#666"
-        }}
-      >
+      <div style={styles.loadingContainer}>
         Carregando sessão...
       </div>
     );
@@ -173,4 +152,16 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+const styles = {
+  loadingContainer: {
+    display: "flex",
+    height: "100dvh",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: "14px",
+    color: "#666",
+    fontFamily: "sans-serif"
+  }
 };
