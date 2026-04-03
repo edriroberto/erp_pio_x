@@ -106,7 +106,7 @@ export default function SepultamentosPorNome() {
                   <th style={{ width: 350 }}>Nome</th>
                   <th>Quadra</th>
                   <th>Lote</th>
-                  <th>Gaveta</th>
+                  <th>Vaga</th>
                   <th>Nascimento</th>
                   <th>Falecimento</th>
                   <th>Sepultamento</th>

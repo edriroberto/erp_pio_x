@@ -174,7 +174,7 @@ export default function SepultamentosPeriodo() {
                 <th style={{ width: '350px' }}>Nome</th>
                 <th>Quadra</th>
                 <th>Lote</th>
-                <th>Gaveta</th>
+                <th>Vaga</th>
                 <th>Nascimento</th>
                 <th>Falecimento</th>
                 <th style={{ textAlign: 'center' }}>Idade</th>

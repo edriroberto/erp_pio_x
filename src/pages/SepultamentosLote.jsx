@@ -173,7 +173,7 @@ export default function SepultamentosLote() {
                 <thead>
                   <tr>
                     <th>Nome</th>
-                    <th>Gaveta</th>
+                    <th>Vaga</th>
                     <th>Nascimento</th>
                     <th>Falecimento</th>
                     <th>Sepultamento</th>

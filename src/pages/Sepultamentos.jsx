@@ -151,7 +151,7 @@ export default function Sepultamentos() {
                   <th>Nome</th>
                   <th>Quadra</th>
                   <th>Lote</th>
-                  <th>Gaveta</th>
+                  <th>Vaga</th>
                   <th>Nascimento</th>
                   <th>Falecimento</th>
                   <th>Sepultamento</th>

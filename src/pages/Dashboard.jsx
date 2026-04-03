@@ -247,7 +247,7 @@ export default function Dashboard() {
                   <th>Nome</th>
                   <th>Quadra</th>
                   <th style={{ textAlign: 'center' }}>Lote</th>
-                  <th style={{ textAlign: 'center' }}>Gaveta</th>
+                  <th style={{ textAlign: 'center' }}>Vaga</th>
                   <th>Nascimento</th>
                   <th>Falecimento</th>
                   <th style={{ textAlign: 'center' }}>Idade</th>
