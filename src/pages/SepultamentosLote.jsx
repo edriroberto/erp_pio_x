@@ -205,7 +205,7 @@ export default function SepultamentosLote() {
                         style={{ cursor: 'pointer' }}
                     >
                         <td style={{ fontWeight: '600' }}>{s.nome}</td>
-                        <td>{s.gaveta || "-"}</td>
+                        <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
                         <td>{formatarData(s.data_nascimento)}</td>
                         <td>{formatarData(s.data_falecimento)}</td>
                         <td>{formatarData(s.data_sepultamento)}</td>

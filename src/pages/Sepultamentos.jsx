@@ -181,7 +181,8 @@ export default function Sepultamentos() {
                       </td>
                       <td>{s.quadra}</td>
                       <td>{s.lote}</td>
-                      <td>{s.gaveta || "-"}</td>
+                      <td style={{ textAlign: 'center' }}>{s.gaveta || "-"}</td>
+                      
                       <td>{formatarData(s.data_nascimento)}</td>
                       <td>{formatarData(s.data_falecimento)}</td>
                       <td>{formatarData(s.data_sepultamento)}</td>
