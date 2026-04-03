@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, WifiOff } from "lucide-react"; // Adicionado ícone de offline
+import { AlertCircle, WifiOff } from "lucide-react";
 
 // Hooks Customizados
 import { useSepultamentos } from "../Hooks/useSepultamentos";
 import { useIsMobile } from "../Hooks/useMobile";
+import { useAuth } from "../Hooks/useAuth"; // Importado para gerenciar permissões
 
 // Componentes
 import Toolbar from "../components/Toolbar";
@@ -12,23 +13,24 @@ import SepultamentoList from "../components/SepultamentoList";
 import SepultamentoSearchBar from "../components/SepultamentoSearchBar";
 import ContainerPagina from "../components/ContainerPagina";
 import ContainerTabela from "../components/ContainerTabela";
+import Permissao from "../components/Permissao";
 
 // Utilitários
 import { formatarData } from "../utils/formatarData"; 
-
 import "../styles/tabela.css";
 
 export default function Sepultamentos() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { perfil } = useAuth(); // Obtém o nível (master, admin, consulta)
   
   const { dados, loading, carregar, excluir } = useSepultamentos();
   
   const [selecionado, setSelecionado] = useState(null);
   const [filtro, setFiltro] = useState("");
-  const [isOffline, setIsOffline] = useState(!navigator.onLine); // Estado de conexão
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  // Monitorar status da internet
+  // --- MONITORAMENTO DE CONEXÃO ---
   useEffect(() => {
     const handleStatus = () => setIsOffline(!navigator.onLine);
     window.addEventListener("online", handleStatus);
@@ -39,39 +41,39 @@ export default function Sepultamentos() {
     };
   }, []);
 
-  // Carrega os dados e gerencia o cache do PWA
+  // --- CARREGAMENTO INICIAL ---
   useEffect(() => {
-    const carregarComCache = async () => {
-      await carregar();
-    };
-    carregarComCache();
+    carregar();
   }, [carregar]);
 
-  // Lógica de Persistência: Sempre que 'dados' atualizar via rede, salvamos no cache
+  // --- PERSISTÊNCIA DE CACHE (LocalStorage) ---
   useEffect(() => {
-    if (dados && dados.length > 0) {
+    if (dados?.length > 0) {
       localStorage.setItem("cache_sepultamentos", JSON.stringify(dados));
     }
   }, [dados]);
 
-  // Dados Finais: Se estiver carregando e não houver dados, tentamos ler o cache imediatamente
-  const dadosExibicao = (dados.length === 0 && !loading) 
-    ? JSON.parse(localStorage.getItem("cache_sepultamentos") || "[]")
-    : dados;
+  // --- LÓGICA DE EXIBIÇÃO ---
+  const dadosExibicao = useMemo(() => {
+    if (dados.length === 0 && !loading) {
+      return JSON.parse(localStorage.getItem("cache_sepultamentos") || "[]");
+    }
+    return dados;
+  }, [dados, loading]);
 
-  // Filtro local (Busca rápida em memória)
-  const dadosFiltrados = dadosExibicao.filter(s => {
-    if (!filtro) return true;
+  // Filtro local otimizado
+  const dadosFiltrados = useMemo(() => {
     const t = filtro.toLowerCase();
-    return (
+    return dadosExibicao.filter(s => 
+      !filtro || 
       s.nome?.toLowerCase().includes(t) ||
       s.quadra?.toLowerCase().includes(t) ||
       s.lote?.toString().includes(t) ||
       s.funeraria?.toLowerCase().includes(t)
     );
-  });
+  }, [dadosExibicao, filtro]);
 
-  // Handlers de Ação
+  // --- HANDLERS ---
   const handleInserir = () => navigate("/cadastrar-sepultamento");
 
   const handleEditar = () => {
@@ -80,58 +82,43 @@ export default function Sepultamentos() {
   };
 
   const handleExcluir = async () => {
-    if (isOffline) return alert("Não é possível excluir registros sem conexão com a internet.");
+    if (isOffline) return alert("A exclusão requer conexão com a internet.");
     if (!selecionado) return alert("Selecione um registro.");
     
-    const confirmou = window.confirm(`Excluir definitivamente ${selecionado.nome}?`);
-    if (!confirmou) return;
-
-    const res = await excluir(selecionado.id);
-    
-    if (res.success) {
-      alert("Registro excluído!");
-      setSelecionado(null);
-    } else {
-      alert("Erro ao excluir: " + res.error);
+    if (window.confirm(`Excluir definitivamente o registro de ${selecionado.nome}?`)) {
+      const res = await excluir(selecionado.id);
+      if (res.success) {
+        setSelecionado(null);
+      } else {
+        alert("Erro ao excluir: " + res.error);
+      }
     }
   };
 
   return (
     <ContainerPagina>
-      {/* AVISO DE MODO OFFLINE */}
+      {/* STATUS OFFLINE */}
       {isOffline && (
-        <div style={{
-          background: "#feebc8", color: "#c05621", padding: "8px 15px", 
-          borderRadius: "8px", marginBottom: "5px", display: "flex", marginTop: "5px", 
-          alignItems: "center", gap: "10px", fontSize: "14px", fontWeight: "bold"
-        }}>
-          <WifiOff size={18} /> Modo Offline: Exibindo dados salvos localmente.
+        <div style={styles.offlineBadge}>
+          <WifiOff size={18} /> Modo Offline: Dados carregados do cache local.
         </div>
       )}
 
-      {/* HEADER DINÂMICO */}
+      {/* CABEÇALHO E FERRAMENTAS */}
       <div style={{
-        display: "flex",
+        ...styles.header,
         flexDirection: isMobile ? "column" : "row",
         alignItems: isMobile ? "stretch" : "center",
-        justifyContent: "space-between",
-        gap: isMobile ? "5px" : "10px",
-        marginBottom: "3px",
-        marginTop: "-10px"
       }}>
-        <h2 style={{ margin: '10px 0 5px', fontSize: isMobile ? "20px" : "24px", color: "#1a202c" }}>
+        <h2 style={{ ...styles.title, fontSize: isMobile ? "20px" : "24px" }}>
           Sepultamentos
         </h2>
 
-        <div style={{ 
-          flex: isMobile ? "none" : 1, 
-          maxWidth: isMobile ? "100%" : "500px",
-          //marginBottom: "-10px",
-          //marginTop: "-5px"
-        }}>
+        <div style={{ flex: isMobile ? "none" : 1, maxWidth: isMobile ? "100%" : "500px" }}>
           <SepultamentoSearchBar onBuscar={setFiltro} />
         </div>
 
+        {/* TOOLBAR COM CONTROLE DE PERMISSÃO */}
         <Toolbar
           onInserir={handleInserir}
           onEditar={handleEditar}
@@ -139,87 +126,121 @@ export default function Sepultamentos() {
           itemSelecionado={selecionado}
           mostrarFiltro={false}
           fixa={isMobile}
+          // Passamos o perfil para a Toolbar decidir internamente o que mostrar, 
+          // ou garantimos que ela aceite o nível 'consulta' para o onInserir
+          nivelUsuario={perfil?.nivel} 
         />
       </div>
-{/* Alteração aqui: removido maxHeight fixo e garantido o crescimento do container */}
-<div style={{
-  flex: 1,
-  display: "flex",
-  flexDirection: "column",
-  minHeight: 0, // Mantém o scroll interno funcional
-  height: "100%", // Força o preenchimento total do espaço disponível
-}}>
 
-      <ContainerTabela>
-  {loading && dadosExibicao.length === 0 && <p style={{ padding: 20 }}>Carregando...</p>}
-  
-  {(!loading || dadosExibicao.length > 0) && isMobile ? (
-    <SepultamentoList
-      dados={dadosFiltrados}
-      selecionado={selecionado}
-      onSelecionar={setSelecionado}
-      formatarData={formatarData}
-    />
-  ) : (
-          <table className="tabela">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Quadra</th>
-                <th>Lote</th>
-                <th>Gaveta</th>
-                <th>Nascimento</th>
-                <th>Falecimento</th>
-                <th>Sepultamento</th>
-                <th>Idade</th>
-                <th>Funerária</th>
-                <th>Observações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dadosFiltrados.map((s) => {
-                const selecionadoLinha = selecionado?.id === s.id;
-                const pendenciaObito = s.obito_entregue === false;
-
-                const bgRow = selecionadoLinha ? "#ebf8ff" : (pendenciaObito ? "#fff5f5" : "transparent");
-                const textColor = selecionadoLinha ? "#2b6cb0" : (pendenciaObito ? "#c53030" : "#2d3748");
-
-                return (
-                  <tr
-                    key={s.id}
-                    onClick={() => setSelecionado(s)}
-                    style={{
-                      cursor: "pointer",
-                      backgroundColor: bgRow,
-                      color: textColor,
-                      fontWeight: selecionadoLinha ? "600" : "400",
-                      transition: "all 0.2s ease"
-                    }}
-                    className="linha-tabela"
-                  >
-                    <td style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}>
-                      {pendenciaObito && (
-                        <AlertCircle size={16} color="#e53e3e" strokeWidth={2.5} title="Óbito pendente" />
-                      )}
-                      {s.nome}
-                    </td>
-                    <td>{s.quadra}</td>
-                    <td>{s.lote}</td>
-                    <td>{s.gaveta || "-"}</td>
-                    <td>{formatarData(s.data_nascimento)}</td>
-                    <td>{formatarData(s.data_falecimento)}</td>
-                    <td>{formatarData(s.data_sepultamento)}</td>
-                    <td>{s.idade}</td>
-                    <td>{s.funeraria}</td>
-                    <td style={{ fontSize: "11px", opacity: 0.8 }}>{s.observacoes}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </ContainerTabela>
-</div>
+      {/* ÁREA DA TABELA / LISTA */}
+      <div style={styles.contentWrapper}>
+        <ContainerTabela>
+          {loading && dadosExibicao.length === 0 ? (
+            <p style={{ padding: 20 }}>Carregando registros...</p>
+          ) : isMobile ? (
+            <SepultamentoList
+              dados={dadosFiltrados}
+              selecionado={selecionado}
+              onSelecionar={setSelecionado}
+              formatarData={formatarData}
+            />
+          ) : (
+            <table className="tabela">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Quadra</th>
+                  <th>Lote</th>
+                  <th>Gaveta</th>
+                  <th>Nascimento</th>
+                  <th>Falecimento</th>
+                  <th>Sepultamento</th>
+                  <th>Idade</th>
+                  <th>Funerária</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dadosFiltrados.map((s) => {
+                  const isSel = selecionado?.id === s.id;
+                  const pendente = s.obito_entregue === false;
+                  return (
+                    <tr
+                      key={s.id}
+                      onClick={() => setSelecionado(s)}
+                      className={`linha-tabela ${isSel ? 'selecionada' : ''} ${pendente ? 'pendente' : ''}`}
+                      style={{
+                        cursor: "pointer",
+                        backgroundColor: isSel ? "#ebf8ff" : (pendente ? "#fff5f5" : "transparent"),
+                        color: isSel ? "#2b6cb0" : (pendente ? "#c53030" : "#2d3748"),
+                      }}
+                    >
+                      <td style={styles.nameCell}>
+                        {pendente && <AlertCircle size={16} color="#e53e3e" title="Óbito pendente" />}
+                        {s.nome}
+                      </td>
+                      <td>{s.quadra}</td>
+                      <td>{s.lote}</td>
+                      <td>{s.gaveta || "-"}</td>
+                      <td>{formatarData(s.data_nascimento)}</td>
+                      <td>{formatarData(s.data_falecimento)}</td>
+                      <td>{formatarData(s.data_sepultamento)}</td>
+                      <td>{s.idade}</td>
+                      <td>{s.funeraria}</td>
+                      <td style={styles.obsCell}>{s.observacoes}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </ContainerTabela>
+      </div>
     </ContainerPagina>
   );
 }
+
+// Estilos extraídos para limpeza do render
+const styles = {
+  offlineBadge: {
+    background: "#feebc8",
+    color: "#c05621",
+    padding: "8px 15px",
+    borderRadius: "8px",
+    marginBottom: "5px",
+    display: "flex",
+    marginTop: "5px",
+    alignItems: "center",
+    gap: "10px",
+    fontSize: "14px",
+    fontWeight: "bold"
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "10px",
+    marginBottom: "3px",
+    marginTop: "-10px"
+  },
+  title: {
+    margin: '10px 0 5px',
+    color: "#1a202c"
+  },
+  contentWrapper: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    minHeight: 0,
+    height: "100%",
+  },
+  nameCell: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontWeight: "600"
+  },
+  obsCell: {
+    fontSize: "11px",
+    opacity: 0.8
+  }
+};

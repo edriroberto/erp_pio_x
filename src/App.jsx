@@ -97,10 +97,10 @@ export default function App() {
 
                 {/* --- ROTAS DE GESTÃO (Apenas Admin e Master) --- */}
                 <Route path="/sepultamentos" element={
-                  <ProtectedRoute niveisPermitidos={['admin', 'master']}><Sepultamentos /></ProtectedRoute>
+                  <ProtectedRoute niveisPermitidos={['admin', 'master', 'consulta']}><Sepultamentos /></ProtectedRoute>
                 } />
                 <Route path="/quadras" element={
-                  <ProtectedRoute niveisPermitidos={['admin', 'master']}><Quadras /></ProtectedRoute>
+                  <ProtectedRoute niveisPermitidos={['admin', 'master', 'consulta']}><Quadras /></ProtectedRoute>
                 } />
                 <Route path="/lotes" element={
                   <ProtectedRoute niveisPermitidos={['admin', 'master']}><Lotes /></ProtectedRoute>

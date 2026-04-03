@@ -39,11 +39,11 @@ export default function Sidebar() {
   // Adicionamos a propriedade 'niveis' para cada rota
   const navLinks = [
     { to: "/", label: "Início", icon: Home, niveis: ['consulta', 'admin', 'master'] },
-    { to: "/sepultamentos", label: "Registros", icon: UserPlus, niveis: ['admin', 'master'] },
-    { to: "/sepultamentos-nome", label: "Busca Nome", icon: Search, niveis: ['consulta', 'admin', 'master'] },
+    { to: "/sepultamentos", label: "Registros", icon: UserPlus, niveis: ['admin', 'master', 'consulta'] },
+    { to: "/sepultamentos-nome", label: "Busca Nome", icon: Search, niveis: ['admin', 'master'] },
     { to: "/sepultamentos-periodo", label: "Período", icon: Calendar, niveis: ['consulta', 'admin', 'master'] },
     { to: "/sepultamentos-lote", label: "Busca por Lotes", icon: MapPin, niveis: ['consulta', 'admin', 'master'] },
-    { to: "/quadras", label: "Quadras", icon: LayoutGrid, niveis: ['admin', 'master'] },
+    { to: "/quadras", label: "Quadras", icon: LayoutGrid, niveis: ['admin', 'master', 'consulta'] },
     { to: "/funerarias", label: "Funerárias", icon: Building2, niveis: ['admin', 'master'] },
     { to: "/coveiros", label: "Coveiros", icon: UserRound, niveis: ['admin', 'master'] },
     { to: "/exumacoes", label: "Exumar", icon: Archive, niveis: ['master'] },
@@ -82,7 +82,7 @@ export default function Sidebar() {
                 return [0, 1, 5, 8, 9].includes(index);
               } else {
                 // Atalhos simplificados para colegas/coveiros
-                return [0, 1].includes(index);
+                return [0, 1, 4].includes(index);
               }
             })
             .map((link) => {
